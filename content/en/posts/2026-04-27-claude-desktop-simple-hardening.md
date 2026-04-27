@@ -30,6 +30,8 @@ Simple rule: **only connect an MCP when you're losing more than 30 minutes a wee
     - *Why* : prevents targeted-phishing and identity-exfiltration scenarios.
 - **No messaging MCP** (Slack, Teams, WhatsApp, iMessage…).
     - *Why* : auto-sending under the user's identity is a fraud vector, especially combined with deepfakes.
+- **No write-capable project management MCP** (Linear, Jira, Asana, GitHub Issues with `write` scope).
+    - *Why* : a booby-trapped comment or issue becomes an IPI trigger, and the agent can spam or corrupt the tracker under your identity.
 
 ### No access to cloud files / backups
 
@@ -59,6 +61,8 @@ Simple rule: **only connect an MCP when you're losing more than 30 minutes a wee
 - **No MCP that reads `.env`, the keychain, Credential Manager, or user environment variables.**
 - **No cloud MCP** (AWS / Azure / GCP with user credentials).
     - *Why* : cloud credentials grant access to budgets and data that vastly outweigh the upside of an assistant.
+- **No production-database MCP** (Postgres, MySQL, remote SQLite, MongoDB, Supabase, Snowflake) with prod or pre-prod credentials.
+    - *Why* : the IPI → `SELECT * FROM users` or `DROP TABLE` chain is trivial ; even read-only, it's direct exfiltration. If you need to inspect a schema, do it on a disposable local database, not the real one.
 
 ### No power-tool dev MCPs
 
@@ -96,9 +100,9 @@ Doable in under 30 minutes, no advanced knowledge required.
 
 6. **Standard user account** (not admin) for using Claude Desktop. UAC set to "Always notify".
 7. **Controlled Folder Access** enabled (Defender → Ransomware protection) on :
-    - your Obsidian vault,
     - the Documents folder,
     - the Pictures folder,
+    - your sensitive notes / projects / writing folders,
     - any local backup folder.
     - Effect : Claude Desktop can only write into these folders if you grant it explicit, per-folder permission.
 8. **Windows Firewall** : create an outbound rule for `claude.exe` (or the Claude Desktop binary) that allows only `*.anthropic.com` and blocks the rest. Easy via Windows Defender Firewall with Advanced Security → Outbound Rules.
@@ -158,7 +162,7 @@ Everything denied above remains **allowed on [Claude.ai](https://claude.ai) in t
 - [ ] Open `claude_desktop_config.json` and **empty** the `mcpServers` section (or trim it to 1–2 vetted entries).
 - [ ] **Revoke every token** on the SaaS side for the MCPs you removed (Gmail, Drive, GitHub, Notion, Slack…).
 - [ ] **Disable auto-start** of Claude Desktop at boot.
-- [ ] **Enable Controlled Folder Access** on the Obsidian vault + Documents + Pictures.
+- [ ] **Enable Controlled Folder Access** on Documents + Pictures + sensitive working folders + local backups.
 - [ ] **Create an outbound firewall rule** : Claude Desktop allowed on `*.anthropic.com` only.
 - [ ] **Update Claude Desktop** to the latest version.
 - [ ] **Audit Camera / Mic / Location permissions** in Windows Settings.
