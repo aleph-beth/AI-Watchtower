@@ -1,0 +1,125 @@
+baseURL = "https://aleph-beth.github.io/AI-Watchtower/"
+title = "AI Watchtower"
+theme = "PaperMod"
+
+defaultContentLanguage = "fr"
+defaultContentLanguageInSubdir = true
+
+enableRobotsTXT = true
+buildDrafts = false
+buildFuture = false
+buildExpired = false
+
+pygmentsUseClasses = true
+
+[minify]
+  disableXML = true
+  minifyOutput = true
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[params]
+  env = "production"
+  description = "AI security research — prompt injection, MCP vulnerabilities, agent threat models, hardening playbooks."
+  author = "aleph-beth"
+  defaultTheme = "auto"
+  ShowReadingTime = true
+  ShowShareButtons = false
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowWordCount = true
+  ShowToc = true
+  TocOpen = false
+  comments = false
+  disableSpecial1stPost = false
+  disableScrollToTop = false
+  hidemeta = false
+  hideSummary = false
+
+  [params.assets]
+    disableHLJS = true
+    disableFingerprinting = false
+    favicon = "/favicon.ico"
+
+  [params.homeInfoParams]
+    Title = "AI Watchtower"
+    Content = "Recherche en sécurité IA — injection de prompts, failles MCP, modèles de menace agentiques, playbooks de durcissement."
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/aleph-beth/AI-Watchtower"
+
+[markup]
+  [markup.highlight]
+    noClasses = false
+    codeFences = true
+    guessSyntax = true
+    lineNos = false
+    style = "monokai"
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+  [markup.tableOfContents]
+    endLevel = 4
+    ordered = false
+    startLevel = 2
+
+# ─── Multilingual ────────────────────────────────────────────────────────────
+
+[languages]
+
+  [languages.fr]
+    languageName = "Français"
+    languageCode = "fr-FR"
+    weight = 1
+    title = "AI Watchtower"
+    [languages.fr.params]
+      description = "Recherche en sécurité IA — injection de prompts, failles MCP, modèles de menace agentiques, playbooks de durcissement."
+    [[languages.fr.menu.main]]
+      identifier = "posts"
+      name = "Articles"
+      url = "/posts/"
+      weight = 10
+    [[languages.fr.menu.main]]
+      identifier = "tags"
+      name = "Tags"
+      url = "/tags/"
+      weight = 20
+    [[languages.fr.menu.main]]
+      identifier = "search"
+      name = "Recherche"
+      url = "/search/"
+      weight = 30
+
+  [languages.en]
+    languageName = "English"
+    languageCode = "en-US"
+    weight = 2
+    title = "AI Watchtower"
+    [languages.en.params]
+      description = "AI security research — prompt injection, MCP vulnerabilities, agent threat models, hardening playbooks."
+      [languages.en.params.homeInfoParams]
+        Title = "AI Watchtower"
+        Content = "AI security research — prompt injection, MCP vulnerabilities, agent threat models, hardening playbooks."
+    [[languages.en.menu.main]]
+      identifier = "posts"
+      name = "Posts"
+      url = "/posts/"
+      weight = 10
+    [[languages.en.menu.main]]
+      identifier = "tags"
+      name = "Tags"
+      url = "/tags/"
+      weight = 20
+    [[languages.en.menu.main]]
+      identifier = "search"
+      name = "Search"
+      url = "/search/"
+      weight = 30
+
+[outputFormats]
+  [outputFormats.RSS]
+    mediatype = "application/rss"
+    baseName = "feed"
