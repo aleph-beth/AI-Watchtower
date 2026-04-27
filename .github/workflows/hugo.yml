@@ -26,7 +26,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.140.2
+      # PaperMod (master) requires Hugo >= 0.146.0 (Min declared in its
+      # theme.toml). Stay >= 0.146.x; bump as needed when PaperMod
+      # raises its minimum again.
+      HUGO_VERSION: 0.146.0
     steps:
       - name: Install Hugo CLI
         run: |
