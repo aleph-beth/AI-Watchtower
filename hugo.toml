@@ -2,8 +2,8 @@ baseURL = "https://aleph-beth.github.io/AI-Watchtower/"
 title = "AI Watchtower"
 theme = "PaperMod"
 
-defaultContentLanguage = "fr"
-defaultContentLanguageInSubdir = true
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = false
 
 enableRobotsTXT = true
 buildDrafts = false
@@ -67,13 +67,19 @@ buildExpired = false
   [languages.fr]
     languageName = "Français"
     languageCode = "fr-FR"
-    weight = 1
+    weight = 2
     title = "AI Watchtower"
     [languages.fr.params]
-      description = "Recherche en sécurité IA — injection de prompts, failles MCP, modèles de menace agentiques, playbooks de durcissement."
+      description = "Veille critique sur la sécurité des systèmes d'IA — injection de prompts, failles MCP, modèles de menace agentiques, playbooks de durcissement."
       [languages.fr.params.homeInfoParams]
         Title = "AI Watchtower"
-        Content = "Recherche en sécurité IA — injection de prompts, failles MCP, modèles de menace agentiques, playbooks de durcissement."
+        Content = """
+**AI Watchtower** est une veille critique sur la sécurité des systèmes d'IA. Chaque entrée part d'un morceau de recherche en cours — injection de prompts directe et indirecte, failles dans les serveurs MCP, modèles de menace pour les agents, arbitrages concrets de durcissement — et le traduit en consignes actionnables pour les concepteurs et opérateurs d'assistants LLM.
+
+Le format est court, structuré, opérationnel : une analyse, une grille de risque, une checklist applicable le jour même.
+
+Articles ci-dessous.
+"""
     [[languages.fr.menu.main]]
       identifier = "posts"
       name = "Articles"
@@ -93,13 +99,19 @@ buildExpired = false
   [languages.en]
     languageName = "English"
     languageCode = "en-US"
-    weight = 2
+    weight = 1
     title = "AI Watchtower"
     [languages.en.params]
-      description = "AI security research — prompt injection, MCP vulnerabilities, agent threat models, hardening playbooks."
+      description = "Critical watch on AI security — prompt injection, MCP vulnerabilities, agent threat models, hardening playbooks."
       [languages.en.params.homeInfoParams]
         Title = "AI Watchtower"
-        Content = "AI security research — prompt injection, MCP vulnerabilities, agent threat models, hardening playbooks."
+        Content = """
+**AI Watchtower** is a critical-watch project on the security of AI systems. Each entry takes a piece of ongoing research — direct and indirect prompt injection, MCP server vulnerabilities, agent threat models, concrete hardening tradeoffs — and turns it into actionable guidance for builders and operators of LLM-based assistants.
+
+The format is short, structured, operational: one analysis, one risk grid, one checklist you can apply the same day.
+
+Articles below.
+"""
     [[languages.en.menu.main]]
       identifier = "posts"
       name = "Posts"
