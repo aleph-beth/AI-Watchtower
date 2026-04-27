@@ -67,6 +67,7 @@ buildExpired = false
   [languages.fr]
     languageName = "Français"
     languageCode = "fr-FR"
+    contentDir = "content/fr"
     weight = 2
     title = "AI Watchtower"
     [languages.fr.params]
@@ -99,6 +100,7 @@ Articles ci-dessous.
   [languages.en]
     languageName = "English"
     languageCode = "en-US"
+    contentDir = "content/en"
     weight = 1
     title = "AI Watchtower"
     [languages.en.params]
