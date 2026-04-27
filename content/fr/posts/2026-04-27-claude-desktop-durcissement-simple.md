@@ -30,6 +30,8 @@ Règle simple : **on connecte un MCP uniquement quand on perd plus de 30 minutes
     - *Pourquoi* : empêche les scénarios de phishing ciblé ou d'exfiltration d'identités.
 - **Pas de MCP messagerie** (Slack, Teams, WhatsApp, iMessage…).
     - *Pourquoi* : l'envoi automatique au nom de l'utilisateur est un vecteur de fraude, notamment combiné aux deepfakes.
+- **Pas de MCP gestion de projet à droits d'écriture** (Linear, Jira, Asana, GitHub Issues avec scope `write`).
+    - *Pourquoi* : un commentaire ou une issue piégée devient un déclencheur d'IPI, et l'agent peut spammer / corrompre le tracker au nom de l'utilisateur.
 
 ### Pas d'accès aux fichiers cloud / sauvegardes
 
@@ -59,6 +61,8 @@ Règle simple : **on connecte un MCP uniquement quand on perd plus de 30 minutes
 - **Pas de MCP qui lit `.env`, le keychain, Credential Manager, ou les variables d'environnement utilisateur.**
 - **Pas de MCP cloud** (AWS / Azure / GCP avec credentials utilisateur).
     - *Pourquoi* : les credentials cloud donnent accès à des budgets et à des données qui dépassent largement la valeur ajoutée d'un assistant.
+- **Pas de MCP base de données de production** (Postgres, MySQL, SQLite distant, MongoDB, Supabase, Snowflake) avec credentials de prod ou de pré-prod.
+    - *Pourquoi* : la chaîne d'attaque IPI → requête `SELECT * FROM users` ou `DROP TABLE` est triviale ; même en lecture seule, c'est de l'exfiltration directe. Si tu as besoin d'inspecter un schéma, fais-le sur une base locale jetable, pas sur la vraie.
 
 ### Pas d'accès aux outils de développement à pouvoirs étendus
 
@@ -96,9 +100,9 @@ Si on veut absolument 1–2 MCP sur Desktop, ne garder que des MCP **read-only**
 
 6. **Compte utilisateur standard** (pas admin) pour utiliser Claude Desktop. UAC sur « Always notify ».
 7. **Controlled Folder Access** activé (Defender → Ransomware protection) sur :
-    - le vault Obsidian,
     - le dossier Documents,
     - le dossier Pictures,
+    - les dossiers de notes / projets / écriture sensibles,
     - tout dossier de sauvegarde local.
     - Effet : Claude Desktop ne peut écrire dans ces dossiers que si on l'autorise explicitement, par dossier.
 8. **Pare-feu Windows** : créer une règle sortante pour `claude.exe` (ou le binaire Claude Desktop) qui n'autorise que `*.anthropic.com` et bloque le reste. Application simple via Windows Defender Firewall avec sécurité avancée → Règles de trafic sortant.
@@ -158,7 +162,7 @@ Tout ce qui est interdit ci-dessus reste **autorisé sur [Claude.ai](https://cla
 - [ ] Ouvrir `claude_desktop_config.json` et **vider** la section `mcpServers` (ou la réduire à 1–2 entrées validées).
 - [ ] **Révoquer tous les tokens** côté SaaS pour les MCP retirés (Gmail, Drive, GitHub, Notion, Slack…).
 - [ ] **Désactiver l'auto-démarrage** de Claude Desktop au boot.
-- [ ] **Activer Controlled Folder Access** sur le vault Obsidian + Documents + Pictures.
+- [ ] **Activer Controlled Folder Access** sur Documents + Pictures + dossiers de travail sensibles + sauvegardes locales.
 - [ ] **Créer une règle pare-feu sortante** : Claude Desktop autorisé sur `*.anthropic.com` uniquement.
 - [ ] **Mettre à jour Claude Desktop** à la dernière version.
 - [ ] **Vérifier les permissions** Caméra / Micro / Localisation dans Paramètres Windows.
