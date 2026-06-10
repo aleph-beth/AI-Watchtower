@@ -1,0 +1,266 @@
+/* ============================================================================
+   AlephBeth — interactive / dynamic article components
+   Counters · collapsibles · checklist · interactive infographic ·
+   sober scroll-reveal · reading-progress bar.
+   Brand tokens come from alephbeth.css (--ab-braise / --ab-flamme / …);
+   fallbacks keep this file standalone.
+   All motion is gated behind body.ab-js and disabled for reduced-motion.
+   ========================================================================== */
+
+:root {
+    --ab-accent-fallback: #d6453a;
+}
+
+/* ----- Reading progress bar --------------------------------------------- */
+
+.ab-progress {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    height: 3px;
+    width: 100%;
+    transform: scaleX(var(--ab-scroll, 0));
+    transform-origin: 0 50%;
+    background: linear-gradient(90deg, var(--ab-braise, #d6453a), var(--ab-flamme, #f2a05a));
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/* ----- Sober scroll-reveal ---------------------------------------------- */
+
+body.ab-js .ab-reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    will-change: opacity, transform;
+}
+body.ab-js .ab-reveal.is-in {
+    opacity: 1;
+    transform: none;
+}
+
+/* ----- Animated stats band ---------------------------------------------- */
+
+.ab-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+    margin: 1.6rem 0;
+}
+.ab-stat-card {
+    border: 1px solid var(--border, #e4ddce);
+    border-radius: var(--radius, 8px);
+    background: var(--entry, #fffdf8);
+    padding: 16px 18px;
+    text-align: center;
+}
+.ab-stat-num {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-size: 2.3rem;
+    line-height: 1;
+    color: var(--ab-braise, var(--ab-accent-fallback));
+    font-variant-numeric: tabular-nums;
+    display: block;
+}
+:root[data-theme="dark"] .ab-stat-num { color: var(--ab-flamme, #f2a05a); }
+.ab-stat-label {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.82rem;
+    color: var(--secondary, #5b7384);
+    line-height: 1.3;
+}
+
+/* inline counter (inside prose) */
+.ab-stat {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--ab-braise, var(--ab-accent-fallback));
+}
+:root[data-theme="dark"] .ab-stat { color: var(--ab-flamme, #f2a05a); }
+
+/* ----- Collapsible sections (<details>) --------------------------------- */
+
+.ab-details {
+    border: 1px solid var(--border, #e4ddce);
+    border-radius: var(--radius, 8px);
+    margin: 1.2rem 0;
+    background: var(--entry, #fffdf8);
+    overflow: hidden;
+}
+.ab-details > summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: var(--primary, #15264d);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+}
+.ab-details > summary::-webkit-details-marker { display: none; }
+.ab-details > summary::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-inline-end: 2px solid var(--ab-braise, var(--ab-accent-fallback));
+    border-block-end: 2px solid var(--ab-braise, var(--ab-accent-fallback));
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease;
+    flex: 0 0 auto;
+}
+.ab-details[open] > summary::before { transform: rotate(45deg); }
+.ab-details > summary:hover { color: var(--ab-braise, var(--ab-accent-fallback)); }
+.ab-details-body {
+    padding: 0 16px 14px 16px;
+}
+body.ab-js .ab-details[open] .ab-details-body {
+    animation: ab-slide-down 0.28s ease;
+}
+@keyframes ab-slide-down {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ----- Interactive checklist -------------------------------------------- */
+
+.ab-checklist {
+    border: 1px solid var(--border, #e4ddce);
+    border-radius: var(--radius, 8px);
+    padding: 16px 18px;
+    margin: 1.4rem 0;
+    background: var(--entry, #fffdf8);
+}
+.ab-checklist-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.ab-checklist-meta {
+    font-size: 0.85rem;
+    color: var(--secondary, #5b7384);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.ab-checklist-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--code-bg, #ecedf1);
+    overflow: hidden;
+    flex: 1;
+}
+.ab-checklist-bar > i {
+    display: block;
+    height: 100%;
+    width: var(--ab-done, 0%);
+    background: linear-gradient(90deg, var(--ab-braise, #d6453a), var(--ab-flamme, #f2a05a));
+    transition: width 0.35s ease;
+}
+.ab-checklist ul { list-style: none; margin: 0; padding: 0; }
+.ab-checklist li { margin: 0; padding: 0; }
+.ab-checklist label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    cursor: pointer;
+    line-height: 1.45;
+    border-block-end: 1px solid color-mix(in srgb, var(--border, #e4ddce) 60%, transparent);
+}
+.ab-checklist li:last-child label { border-block-end: none; }
+.ab-checklist input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    border: 2px solid var(--ab-fume, #5b7384);
+    border-radius: 5px;
+    flex: 0 0 auto;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.ab-checklist input[type="checkbox"]:checked {
+    background: var(--ab-braise, var(--ab-accent-fallback));
+    border-color: var(--ab-braise, var(--ab-accent-fallback));
+}
+.ab-checklist input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0px;
+    width: 5px;
+    height: 10px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+.ab-checklist input:checked + span {
+    color: var(--secondary, #5b7384);
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in srgb, var(--ab-braise, #d6453a) 60%, transparent);
+}
+.ab-checklist-reset {
+    background: none;
+    border: 1px solid var(--border, #e4ddce);
+    color: var(--secondary, #5b7384);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+.ab-checklist-reset:hover { border-color: var(--ab-braise, #d6453a); color: var(--ab-braise, #d6453a); }
+.ab-checklist.is-complete { border-color: var(--ab-braise, #d6453a); }
+
+/* ----- Interactive infographic ------------------------------------------ */
+
+.ab-figure-interactive .ab-node {
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+.ab-figure-interactive .ab-node rect {
+    transition: stroke 0.15s ease, stroke-width 0.15s ease;
+}
+.ab-figure-interactive .ab-node:hover rect,
+.ab-figure-interactive .ab-node:focus-visible rect,
+.ab-figure-interactive .ab-node.is-active rect {
+    stroke: var(--ab-braise, #d6453a);
+    stroke-width: 2.5;
+}
+.ab-figure-interactive .ab-node:focus-visible { outline: none; }
+body.ab-js .ab-figure-interactive.has-active .ab-node:not(.is-active) { opacity: 0.5; }
+.ab-figure-detail {
+    margin-top: 10px;
+    border: 1px solid var(--border, #e4ddce);
+    border-inline-start: 3px solid var(--ab-braise, #d6453a);
+    border-radius: 0 var(--radius, 8px) var(--radius, 8px) 0;
+    background: var(--entry, #fffdf8);
+    padding: 12px 16px;
+    font-size: 0.92rem;
+    min-height: 1px;
+}
+.ab-figure-detail:empty { display: none; }
+.ab-figure-detail .ab-figure-detail-title {
+    font-weight: 700;
+    color: var(--primary, #15264d);
+    margin-right: 8px;
+}
+.ab-figure-hint {
+    font-size: 0.78rem;
+    color: var(--secondary, #5b7384);
+    font-style: italic;
+    margin-top: 4px;
+}
+
+/* ----- Reduced motion : kill all transitions/animations ----------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    body.ab-js .ab-reveal { opacity: 1; transform: none; transition: none; }
+    .ab-progress { transition: none; }
+    body.ab-js .ab-details[open] .ab-details-body { animation: none; }
+    .ab-checklist-bar > i { transition: none; }
+}

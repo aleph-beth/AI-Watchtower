@@ -20,7 +20,14 @@ translationKey: "agentic-soc-defensive-ai-attacks"
 2. **Le métier ne disparaît pas, il se déplace vers le haut.** L'analyste Tier 1 « trieur d'alertes » devient *superviseur d'agents* et *ingénieur de détection* ; la valeur migre du traitement vers le jugement, la gouvernance et la validation critique des investigations menées par l'IA.
 3. **L'agent défensif est une cible à part entière.** Détourner un agent qui ne faisait que *lire* générait une fuite ; détourner un agent SOC autonome qui peut **écrire dans le pare-feu** transforme l'outil de défense en levier d'attaque actif — et seuls 5 % des professionnels se disent capables de contenir un agent compromis.
 
-<figure style="margin:1.5rem 0;">
+<div class="ab-stats">
+<div class="ab-stat-card"><span class="ab-stat-num" data-target="18" data-suffix=" min">0</span><span class="ab-stat-label">vuln → exploit automatisé</span></div>
+<div class="ab-stat-card"><span class="ab-stat-num" data-target="29" data-suffix=" min">0</span><span class="ab-stat-label">breakout time moyen (+65 %/an)</span></div>
+<div class="ab-stat-card"><span class="ab-stat-num" data-target="73" data-suffix=" %">0</span><span class="ab-stat-label">des déploiements IA touchés par l'injection de prompt</span></div>
+<div class="ab-stat-card"><span class="ab-stat-num" data-target="5" data-suffix=" %">0</span><span class="ab-stat-label">se disent capables de contenir un agent compromis</span></div>
+</div>
+
+<figure class="ab-figure-interactive" style="margin:1.5rem 0;">
 <svg viewBox="0 0 900 648" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La bascule vers le SOC agentique et les attaques contre les agents IA de défense" style="width:100%;height:auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -37,67 +44,89 @@ translationKey: "agentic-soc-defensive-ai-attacks"
   <text x="36" y="76" font-size="12.5" fill="#0f5132">Moteur — IA offensive : vuln → exploit en 18 min · breakout 29 min (+65 %/an) · cycle d'attaque en minutes</text>
   <!-- boxes row -->
   <!-- SOC humain -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="SOC humain" data-title="SOC humain" data-detail="~40 % des alertes jamais investiguées ; MTTR en jours à semaines. Fatigue d'alerte et turnover : une crise de capacité, pas de talent.">
   <rect x="20" y="100" width="250" height="96" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
   <text x="34" y="124" font-size="14" font-weight="700" fill="#0f172a">SOC humain</text>
   <text x="34" y="148" font-size="12" fill="#334155">File d'alertes saturée</text>
   <text x="34" y="166" font-size="12" fill="#334155">~40 % jamais investiguées</text>
   <text x="34" y="184" font-size="12" fill="#334155">MTTR : jours → semaines</text>
+  </g>
   <line x1="272" y1="148" x2="322" y2="148" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
   <!-- SOC agentique -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="SOC agentique" data-title="SOC agentique" data-detail="Triage Tier 1 automatisé (Microsoft, Netskope, Torq). Le MTTR s'effondre de jours/semaines à minutes/secondes — une boucle machine supervisée, plus une file humaine.">
   <rect x="325" y="100" width="250" height="96" rx="8" fill="#f0fdfa" stroke="#5eead4"/>
   <text x="339" y="124" font-size="14" font-weight="700" fill="#0f172a">SOC agentique</text>
   <text x="339" y="148" font-size="12" fill="#334155">Triage Tier 1 automatisé</text>
   <text x="339" y="166" font-size="12" fill="#334155">Microsoft · Netskope · Torq</text>
   <text x="339" y="184" font-size="12" fill="#334155">MTTR : minutes → secondes</text>
+  </g>
   <line x1="577" y1="148" x2="627" y2="148" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
   <!-- Analyste superviseur -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Analyste superviseur" data-title="Analyste — superviseur" data-detail="L'analyste devient un manager d'agents : ingénierie de détection, gouvernance et validation critique des investigations menées par l'IA. Les tiers s'aplatissent.">
   <rect x="630" y="100" width="250" height="96" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
   <text x="644" y="124" font-size="14" font-weight="700" fill="#0f172a">Analyste — superviseur</text>
   <text x="644" y="148" font-size="12" fill="#334155">Manager d'agents</text>
   <text x="644" y="166" font-size="12" fill="#334155">Ingénierie de détection</text>
   <text x="644" y="184" font-size="12" fill="#334155">Gouvernance &amp; validation</text>
+  </g>
   <text x="20" y="220" font-size="11.5" font-style="italic" fill="#64748b">Le Tier 1 répétitif s'efface ; la valeur monte vers la supervision, l'ingénierie de détection et le jugement. Risque : fermeture de la porte d'entrée junior.</text>
   <!-- ===== SECTION 2 ===== -->
   <rect x="20" y="244" width="860" height="34" rx="6" fill="#0f766e"/>
   <text x="36" y="266" font-size="16" font-weight="700" fill="#ffffff">2 · Le revers — l'agent défensif devient la cible</text>
   <!-- flow row -->
   <!-- Contenu non fiable -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Contenu non fiable" data-title="Contenu non fiable" data-detail="Un agent défensif ingère en permanence du contenu contrôlé par l'attaquant — logs, payloads, phishing, threat intel, tickets. Chaque source est un canal d'injection.">
   <rect x="20" y="292" width="250" height="80" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
   <text x="34" y="316" font-size="14" font-weight="700" fill="#0f172a">Contenu non fiable</text>
   <text x="34" y="340" font-size="12" fill="#334155">Logs d'attaquants, emails,</text>
   <text x="34" y="358" font-size="12" fill="#334155">threat intel, tickets, PDF</text>
+  </g>
   <line x1="272" y1="332" x2="322" y2="332" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
   <!-- Injection de prompt -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Injection de prompt" data-title="Injection de prompt" data-detail="Injection indirecte — risque n°1 du Top 10 OWASP LLM, dans ~73 % des déploiements. Structurel : le modèle ne distingue pas nativement instruction et donnée.">
   <rect x="325" y="292" width="250" height="80" rx="8" fill="#fff7ed" stroke="#fdba74"/>
   <text x="339" y="316" font-size="14" font-weight="700" fill="#0f172a">Injection de prompt</text>
   <text x="339" y="340" font-size="12" fill="#334155">Indirecte · n°1 OWASP LLM</text>
   <text x="339" y="358" font-size="12" fill="#334155">73 % des déploiements</text>
+  </g>
   <line x1="577" y1="332" x2="627" y2="332" stroke="#c2410c" stroke-width="2" marker-end="url(#arrowO)"/>
   <!-- Agent SOC autonome -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Agent SOC autonome" data-title="Agent SOC autonome" data-detail="Avec un accès EN ÉCRITURE au pare-feu/EDR, un agent détourné peut ouvrir des flux, désactiver des détections, créer des règles d'autorisation — la défense devient un levier d'attaque.">
   <rect x="630" y="292" width="250" height="80" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5"/>
   <text x="644" y="316" font-size="14" font-weight="700" fill="#7c2d12">Agent SOC autonome</text>
   <text x="644" y="340" font-size="12" fill="#7c2d12">Accès EN ÉCRITURE pare-feu</text>
   <text x="644" y="358" font-size="12" fill="#7c2d12">→ la défense devient un levier</text>
+  </g>
   <!-- ASI row -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="ASI01 Détournement d'objectif" data-title="ASI01 — Détournement d'objectif" data-detail="Des instructions cachées dans le contenu lu (alerte, log, ticket, email, page, rapport) réorientent l'objectif de l'agent vers celui de l'attaquant.">
   <rect x="20" y="392" width="276" height="82" rx="8" fill="#fff7ed" stroke="#fdba74"/>
   <text x="34" y="416" font-size="13.5" font-weight="700" fill="#9a3412">ASI01 — Détournement d'objectif</text>
   <text x="34" y="440" font-size="12" fill="#334155">Instructions cachées dans</text>
   <text x="34" y="458" font-size="12" fill="#334155">le contenu lu détournent le but</text>
+  </g>
+  <g class="ab-node" tabindex="0" role="button" aria-label="ASI02 Mésusage d'outil" data-title="ASI02 — Mésusage d'outil" data-detail="Un outil légitime utilisé de façon destructrice — modifier une règle pare-feu, désactiver une détection, supprimer une base — sur une instruction empoisonnée ou mal interprétée.">
   <rect x="312" y="392" width="276" height="82" rx="8" fill="#fff7ed" stroke="#fdba74"/>
   <text x="326" y="416" font-size="13.5" font-weight="700" fill="#9a3412">ASI02 — Mésusage d'outil</text>
   <text x="326" y="440" font-size="12" fill="#334155">Outil légitime utilisé de</text>
   <text x="326" y="458" font-size="12" fill="#334155">façon destructrice (règle FW…)</text>
+  </g>
+  <g class="ab-node" tabindex="0" role="button" aria-label="ASI03 Abus de privilège" data-title="ASI03 — Abus de privilège" data-detail="L'identité à privilèges larges de l'agent est abusée pour cartographier le graphe de permissions et escalader en quelques secondes.">
   <rect x="604" y="392" width="276" height="82" rx="8" fill="#fff7ed" stroke="#fdba74"/>
   <text x="618" y="416" font-size="13.5" font-weight="700" fill="#9a3412">ASI03 — Abus de privilège</text>
   <text x="618" y="440" font-size="12" fill="#334155">Abus d'identité &amp;</text>
   <text x="618" y="458" font-size="12" fill="#334155">escalade en quelques secondes</text>
+  </g>
   <!-- Trou de containment -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Le trou de containment" data-title="Le trou de containment" data-detail="La capacité d'action a explosé, pas le contrôle. 90+ organisations déjà détournées ; 47 % des RSSI ont vu un agent dévier ; seuls 5 % se disent capables d'en contenir un.">
   <rect x="20" y="490" width="860" height="58" rx="8" fill="#1e293b"/>
   <text x="36" y="514" font-size="14" font-weight="700" fill="#f8fafc">Le trou de containment</text>
   <text x="36" y="535" font-size="12" fill="#cbd5e1">90+ organisations déjà détournées  ·  47 % des RSSI ont vu un agent dévier  ·  seuls 5 % se disent capables de contenir un agent compromis</text>
+  </g>
   <text x="20" y="576" font-size="11.5" font-style="italic" fill="#64748b">Garde-fous : séparer lecture/proposition et application · humain dans la boucle sur remédiation · identité = compte à privilèges · moindre privilège</text>
   <text x="20" y="594" font-size="11.5" font-style="italic" fill="#64748b">journal immuable (WORM) · kill switch testé · sauvegardes hors d'atteinte de l'agent · red-team injection de prompt</text>
 </svg>
+<div class="ab-figure-detail" aria-live="polite"></div>
+<p class="ab-figure-hint">↑ Survolez ou touchez un bloc pour le détailler.</p>
 </figure>
 
 ---
@@ -252,8 +281,7 @@ Le corpus dessine un **point de marché précis** : la valeur ne se situe plus d
 
 ## 📚 Sources
 
-### Recherche web (10 juin 2026)
-
+{{< details summary="Recherche web — 7 sources (10 juin 2026)" >}}
 - Microsoft Security Blog — [The agentic SOC: Rethinking SecOps for the next decade](https://www.microsoft.com/en-us/security/blog/2026/04/09/the-agentic-soc-rethinking-secops-for-the-next-decade/)
 - Futurum Group — [Netskope Bets Agentic AI Can Solve the SOC Capacity Crisis](https://futurumgroup.com/insights/netskope-bets-agentic-ai-can-solve-the-soc-capacity-crisis/)
 - VentureBeat — [Adversaries hijacked AI security tools at 90+ organizations. The next wave has write access to the firewall](https://venturebeat.com/security/adversaries-hijacked-ai-security-tools-at-90-organizations-the-next-wave-has-write-access-to-the-firewall)
@@ -261,5 +289,6 @@ Le corpus dessine un **point de marché précis** : la valeur ne se situe plus d
 - Prophet Security — [SOC Tiers Explained: How AI Is Flattening Tier 1/2/3](https://www.prophetsecurity.ai/blog/soc-tiers-are-out-how-ai-is-flattening-soc-tier-1-2-3) · [SOC Analyst Career Advancement with AI](https://www.prophetsecurity.ai/blog/soc-analyst-career-advancement-with-ai)
 - OWASP Gen AI Security Project — [Agentic Security Initiative](https://genai.owasp.org/initiatives/agentic-security-initiative/) · [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/)
 - Palo Alto Networks — [Defender's Guide to the Frontier AI Impact on Cybersecurity: May 2026 Update](https://www.paloaltonetworks.com/blog/2026/05/defenders-guide-frontier-ai-impact-cybersecurity-may-2026-update/)
+{{< /details >}}
 
 > *Note : plusieurs statistiques (taux d'automatisation Tier 1, % de réduction du MTTR, hausses d'attaques IA) proviennent d'études fournisseurs et sont à recouper avant décision opérationnelle. Les bornes hautes sont probablement optimistes.*

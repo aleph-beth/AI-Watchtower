@@ -1,0 +1,11 @@
+{{- /* AlephBeth — interactive article behaviours */ -}}
+{{- $js := resources.Get "js/interactive.js" }}
+{{- if $js }}
+{{- $js = $js | js.Build (dict "minify" true) }}
+{{- if not site.Params.assets.disableFingerprinting }}
+{{- $js = $js | fingerprint }}
+<script defer crossorigin="anonymous" src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>
+{{- else }}
+<script defer src="{{ $js.RelPermalink }}"></script>
+{{- end }}
+{{- end }}

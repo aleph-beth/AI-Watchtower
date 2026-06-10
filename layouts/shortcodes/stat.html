@@ -1,0 +1,11 @@
+{{- /* Inline animated counter.
+       Usage: {{< stat value="18" suffix=" min" >}} · {{< stat value="200000" sep="," >}} */ -}}
+{{- $v := .Get "value" -}}
+{{- $prefix := .Get "prefix" | default "" -}}
+{{- $suffix := .Get "suffix" | default "" -}}
+{{- printf `<span class="ab-stat" data-target="%s"` $v | safeHTML -}}
+{{- with .Get "prefix" }}{{ printf ` data-prefix="%s"` . | safeHTML }}{{ end -}}
+{{- with .Get "suffix" }}{{ printf ` data-suffix="%s"` . | safeHTML }}{{ end -}}
+{{- with .Get "decimals" }}{{ printf ` data-decimals="%s"` . | safeHTML }}{{ end -}}
+{{- with .Get "sep" }}{{ printf ` data-sep="%s"` . | safeHTML }}{{ end -}}
+{{- printf `>%s0%s</span>` $prefix $suffix | safeHTML -}}

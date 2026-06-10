@@ -1,0 +1,8 @@
+{{- /* Collapsible section.
+       Usage: {{< details summary="Voir les sources" >}} markdown… {{< /details >}} */ -}}
+<details class="ab-details"{{ if eq (.Get "open") "true" }} open{{ end }}>
+<summary>{{ .Get "summary" }}</summary>
+<div class="ab-details-body">
+{{ .Inner | markdownify }}
+</div>
+</details>

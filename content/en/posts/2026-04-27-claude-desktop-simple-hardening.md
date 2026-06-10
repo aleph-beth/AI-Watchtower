@@ -21,7 +21,7 @@ Simple rule: **only connect an MCP when you're losing more than 30 minutes a wee
 
 ## The "NO" list (explicit denials)
 
-### No access to communications
+{{< details summary="No access to communications" >}}
 
 - **No Gmail / Outlook MCP** → the agent doesn't read your mail, doesn't draft replies, doesn't respond to anything.
     - *Why* : a booby-trapped email becomes a direct indirect-prompt-injection (IPI) vector ; the trifecta is immediate (external mail + history access + send capability).
@@ -33,14 +33,18 @@ Simple rule: **only connect an MCP when you're losing more than 30 minutes a wee
 - **No write-capable project management MCP** (Linear, Jira, Asana, GitHub Issues with `write` scope).
     - *Why* : a booby-trapped comment or issue becomes an IPI trigger, and the agent can spam or corrupt the tracker under your identity.
 
-### No access to cloud files / backups
+{{< /details >}}
+
+{{< details summary="No access to cloud files / backups" >}}
 
 - **No Google Drive / OneDrive / Dropbox / iCloud / Box MCP.**
     - *Why* : an MCP with full Drive scope sees your entire stored digital life. An RCE turns it into total exfiltration.
 - **No access to Time Machine / Windows File History / external backups.**
     - *Why* : backups are the last line of defense against ransomware. They must remain **inaccessible** to any interactive application.
 
-### No access to the Windows system
+{{< /details >}}
+
+{{< details summary="No access to the Windows system" >}}
 
 - **No "Windows-MCP" / `mcp-windows-control` / process-control MCP.**
     - *Why* : these MCPs hand the agent the equivalent of a remote driver on the machine. RCE becomes trivial, and combined with IPI it's zero-click.
@@ -49,14 +53,18 @@ Simple rule: **only connect an MCP when you're losing more than 30 minutes a wee
 - **No global filesystem MCP** (e.g. `@modelcontextprotocol/server-filesystem` pointed at `C:\` or `~`).
     - *Why* : full read/write = complete Confidentiality + Integrity + Availability compromise.
 
-### No browser, no free internet
+{{< /details >}}
+
+{{< details summary="No browser, no free internet" >}}
 
 - **No "Claude in Chrome" / browser-use / playwright / puppeteer MCP.**
     - *Why* : autonomous browsing turns the agent into a consumer of potentially booby-trapped pages (IPI). It's the "full trifecta" scenario by construction.
 - **No generic HTTP fetch MCP, no non-whitelisted "web search".**
     - *Why* : free egress is the main exfiltration channel after RCE. If you need a web search, use **[Claude.ai](https://claude.ai)** (web), which does it natively and without machine access.
 
-### No access to secrets
+{{< /details >}}
+
+{{< details summary="No access to secrets" >}}
 
 - **No MCP that reads `.env`, the keychain, Credential Manager, or user environment variables.**
 - **No cloud MCP** (AWS / Azure / GCP with user credentials).
@@ -64,12 +72,15 @@ Simple rule: **only connect an MCP when you're losing more than 30 minutes a wee
 - **No production-database MCP** (Postgres, MySQL, remote SQLite, MongoDB, Supabase, Snowflake) with prod or pre-prod credentials.
     - *Why* : the IPI → `SELECT * FROM users` or `DROP TABLE` chain is trivial ; even read-only, it's direct exfiltration. If you need to inspect a schema, do it on a disposable local database, not the real one.
 
-### No power-tool dev MCPs
+{{< /details >}}
+
+{{< details summary="No power-tool dev MCPs" >}}
 
 - **No Git/GitHub MCP with full `repo` scope** on Claude Desktop.
     - *Why* : if you need Git assistance, enable it on **Claude Code**, not Desktop. And even there, fine-grained PAT.
 - **No Docker / Kubernetes / infra-orchestrator MCP.**
     - *Why* : ability to mount volumes / launch containers = effectively RCE.
+{{< /details >}}
 
 ## The "OK" list (what you may keep)
 
@@ -159,14 +170,16 @@ Everything denied above remains **allowed on [Claude.ai](https://claude.ai) in t
 
 ## 30-minute checklist — do today
 
-- [ ] Open `claude_desktop_config.json` and **empty** the `mcpServers` section (or trim it to 1–2 vetted entries).
-- [ ] **Revoke every token** on the SaaS side for the MCPs you removed (Gmail, Drive, GitHub, Notion, Slack…).
-- [ ] **Disable auto-start** of Claude Desktop at boot.
-- [ ] **Enable Controlled Folder Access** on Documents + Pictures + sensitive working folders + local backups.
-- [ ] **Create an outbound firewall rule** : Claude Desktop allowed on `*.anthropic.com` only.
-- [ ] **Update Claude Desktop** to the latest version.
-- [ ] **Audit Camera / Mic / Location permissions** in Windows Settings.
-- [ ] **Clear history** for conversations containing sensitive items.
+{{< checklist key="hardening-30min-en" reset="Reset" >}}
+- Open `claude_desktop_config.json` and **empty** the `mcpServers` section (or trim it to 1–2 vetted entries).
+- **Revoke every token** on the SaaS side for the MCPs you removed (Gmail, Drive, GitHub, Notion, Slack…).
+- **Disable auto-start** of Claude Desktop at boot.
+- **Enable Controlled Folder Access** on Documents + Pictures + sensitive working folders + local backups.
+- **Create an outbound firewall rule** : Claude Desktop allowed on `*.anthropic.com` only.
+- **Update Claude Desktop** to the latest version.
+- **Audit Camera / Mic / Location permissions** in Windows Settings.
+- **Clear history** for conversations containing sensitive items.
+{{< /checklist >}}
 
 > **Expected outcome** : in 30 minutes, you bring Claude Desktop back to a **pure chat assistant**, with no MCP surface. The risk of RCE via malicious config drops to near zero, and what remained of the IPI trifecta is broken (no more access to sensitive data, no more exfiltration capacity to anything other than Anthropic).
 

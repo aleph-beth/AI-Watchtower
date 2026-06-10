@@ -1,0 +1,27 @@
+{{- /* Persistent interactive checklist (progress + localStorage).
+       Inner is a markdown bullet list (one item per "- " line).
+       Usage: {{< checklist key="hardening-30min-en" reset="Reset" >}}
+              - Item one
+              - Item **two** with `code`
+              {{< /checklist >}} */ -}}
+{{- $key := .Get "key" | default .Page.RelPermalink -}}
+{{- $reset := .Get "reset" | default "Reset" -}}
+{{- $lines := split .Inner "\n" -}}
+<div class="ab-checklist" data-key="{{ $key }}">
+  <div class="ab-checklist-head">
+    <div class="ab-checklist-bar"><i></i></div>
+    <span class="ab-checklist-meta">0 / 0</span>
+    <button type="button" class="ab-checklist-reset">{{ $reset }}</button>
+  </div>
+  <ul>
+  {{- range $lines -}}
+    {{- $t := trim . " \t\r" -}}
+    {{- if or (hasPrefix $t "- ") (hasPrefix $t "* ") -}}
+      {{- $item := trim (substr $t 2) " " -}}
+      {{- $html := $item | markdownify -}}
+      {{- $html = $html | replaceRE `^<p>(?s:(.*))</p>\s*$` "$1" -}}
+    <li><label><input type="checkbox"><span>{{ $html | safeHTML }}</span></label></li>
+    {{- end -}}
+  {{- end }}
+  </ul>
+</div>
