@@ -20,7 +20,14 @@ translationKey: "agentic-soc-defensive-ai-attacks"
 2. **The job doesn't disappear, it moves up.** The Tier 1 "alert triager" analyst becomes an *agent supervisor* and a *detection engineer*; value migrates from processing toward judgment, governance, and the critical validation of AI-led investigations.
 3. **The defensive agent is a target in its own right.** Hijacking an agent that only *read* produced a leak; hijacking an autonomous SOC agent that can **write to the firewall** turns the defense tool into an active attack lever — and only 5% of professionals say they could contain a compromised agent.
 
-<figure style="margin:1.5rem 0;">
+<div class="ab-stats">
+<div class="ab-stat-card"><span class="ab-stat-num" data-target="18" data-suffix=" min">0</span><span class="ab-stat-label">vuln → automated exploit</span></div>
+<div class="ab-stat-card"><span class="ab-stat-num" data-target="29" data-suffix=" min">0</span><span class="ab-stat-label">avg. breakout time (+65%/yr)</span></div>
+<div class="ab-stat-card"><span class="ab-stat-num" data-target="73" data-suffix=" %">0</span><span class="ab-stat-label">of AI deployments hit by prompt injection</span></div>
+<div class="ab-stat-card"><span class="ab-stat-num" data-target="5" data-suffix=" %">0</span><span class="ab-stat-label">feel able to contain a compromised agent</span></div>
+</div>
+
+<figure class="ab-figure-interactive" style="margin:1.5rem 0;">
 <svg viewBox="0 0 900 648" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The agentic SOC shift and the attacks against defensive AI agents" style="width:100%;height:auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -37,67 +44,89 @@ translationKey: "agentic-soc-defensive-ai-attacks"
   <text x="36" y="76" font-size="12.5" fill="#0f5132">Driver — offensive AI: vuln → exploit in 18 min · 29-min breakout time (+65%/yr) · attack cycle measured in minutes</text>
   <!-- boxes row -->
   <!-- Human SOC -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Human SOC" data-title="Human SOC" data-detail="~40% of alerts never investigated; MTTR in days to weeks. Alert fatigue and turnover make this a capacity crisis, not a talent one.">
   <rect x="20" y="100" width="250" height="96" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
   <text x="34" y="124" font-size="14" font-weight="700" fill="#0f172a">Human SOC</text>
   <text x="34" y="148" font-size="12" fill="#334155">Saturated alert queue</text>
   <text x="34" y="166" font-size="12" fill="#334155">~40% never investigated</text>
   <text x="34" y="184" font-size="12" fill="#334155">MTTR: days → weeks</text>
+  </g>
   <line x1="272" y1="148" x2="322" y2="148" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
   <!-- Agentic SOC -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Agentic SOC" data-title="Agentic SOC" data-detail="Tier-1 triage automated (Microsoft, Netskope, Torq). MTTR collapses from days/weeks to minutes/seconds — a supervised machine loop, not a human queue.">
   <rect x="325" y="100" width="250" height="96" rx="8" fill="#f0fdfa" stroke="#5eead4"/>
   <text x="339" y="124" font-size="14" font-weight="700" fill="#0f172a">Agentic SOC</text>
   <text x="339" y="148" font-size="12" fill="#334155">Tier 1 triage automated</text>
   <text x="339" y="166" font-size="12" fill="#334155">Microsoft · Netskope · Torq</text>
   <text x="339" y="184" font-size="12" fill="#334155">MTTR: minutes → seconds</text>
+  </g>
   <line x1="577" y1="148" x2="627" y2="148" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
   <!-- Analyst supervisor -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Analyst supervisor" data-title="Analyst — supervisor" data-detail="The analyst becomes a manager of agents: detection engineering, governance, and critical validation of AI-led investigations. Tiers flatten.">
   <rect x="630" y="100" width="250" height="96" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
   <text x="644" y="124" font-size="14" font-weight="700" fill="#0f172a">Analyst — supervisor</text>
   <text x="644" y="148" font-size="12" fill="#334155">Manager of agents</text>
   <text x="644" y="166" font-size="12" fill="#334155">Detection engineering</text>
   <text x="644" y="184" font-size="12" fill="#334155">Governance &amp; validation</text>
+  </g>
   <text x="20" y="220" font-size="11.5" font-style="italic" fill="#64748b">Repetitive Tier 1 fades; value moves up toward supervision, detection engineering and judgment. Risk: the junior entry door closes.</text>
   <!-- ===== SECTION 2 ===== -->
   <rect x="20" y="244" width="860" height="34" rx="6" fill="#0f766e"/>
   <text x="36" y="266" font-size="16" font-weight="700" fill="#ffffff">2 · The flip side — the defensive agent becomes the target</text>
   <!-- flow row -->
   <!-- Untrusted content -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Untrusted content" data-title="Untrusted content" data-detail="A defensive agent constantly ingests attacker-controlled text — logs, payloads, phishing, threat intel, tickets. Every source is an injection channel.">
   <rect x="20" y="292" width="250" height="80" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
   <text x="34" y="316" font-size="14" font-weight="700" fill="#0f172a">Untrusted content</text>
   <text x="34" y="340" font-size="12" fill="#334155">Attacker logs, emails,</text>
   <text x="34" y="358" font-size="12" fill="#334155">threat intel, tickets, PDFs</text>
+  </g>
   <line x1="272" y1="332" x2="322" y2="332" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
   <!-- Prompt injection -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Prompt injection" data-title="Prompt injection" data-detail="Indirect prompt injection — #1 OWASP LLM risk, in ~73% of deployments. Structural: the model cannot natively separate trusted instruction from untrusted data.">
   <rect x="325" y="292" width="250" height="80" rx="8" fill="#fff7ed" stroke="#fdba74"/>
   <text x="339" y="316" font-size="14" font-weight="700" fill="#0f172a">Prompt injection</text>
   <text x="339" y="340" font-size="12" fill="#334155">Indirect · #1 OWASP LLM</text>
   <text x="339" y="358" font-size="12" fill="#334155">73% of deployments</text>
+  </g>
   <line x1="577" y1="332" x2="627" y2="332" stroke="#c2410c" stroke-width="2" marker-end="url(#arrowO)"/>
   <!-- Autonomous SOC agent -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="Autonomous SOC agent" data-title="Autonomous SOC agent" data-detail="With WRITE access to the firewall/EDR, a hijacked agent can open flows, disable detections, create allow rules — the defense turned into an active attack lever.">
   <rect x="630" y="292" width="250" height="80" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5"/>
   <text x="644" y="316" font-size="14" font-weight="700" fill="#7c2d12">Autonomous SOC agent</text>
   <text x="644" y="340" font-size="12" fill="#7c2d12">WRITE access to firewall</text>
   <text x="644" y="358" font-size="12" fill="#7c2d12">→ defense becomes a lever</text>
+  </g>
   <!-- ASI row -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="ASI01 Agent Goal Hijack" data-title="ASI01 — Agent Goal Hijack" data-detail="Hidden instructions in content the agent reads (alert, log, ticket, email, page, report) redirect its objective toward the attacker's.">
   <rect x="20" y="392" width="276" height="82" rx="8" fill="#fff7ed" stroke="#fdba74"/>
   <text x="34" y="416" font-size="13.5" font-weight="700" fill="#9a3412">ASI01 — Agent Goal Hijack</text>
   <text x="34" y="440" font-size="12" fill="#334155">Hidden instructions in</text>
   <text x="34" y="458" font-size="12" fill="#334155">read content redirect its goal</text>
+  </g>
+  <g class="ab-node" tabindex="0" role="button" aria-label="ASI02 Tool Misuse" data-title="ASI02 — Tool Misuse" data-detail="A legitimate tool used destructively — edit a firewall rule, disable a detection, drop a database — on a poisoned instruction or a misinterpretation.">
   <rect x="312" y="392" width="276" height="82" rx="8" fill="#fff7ed" stroke="#fdba74"/>
   <text x="326" y="416" font-size="13.5" font-weight="700" fill="#9a3412">ASI02 — Tool Misuse</text>
   <text x="326" y="440" font-size="12" fill="#334155">Legitimate tool used</text>
   <text x="326" y="458" font-size="12" fill="#334155">destructively (edit FW rule…)</text>
+  </g>
+  <g class="ab-node" tabindex="0" role="button" aria-label="ASI03 Privilege Abuse" data-title="ASI03 — Privilege Abuse" data-detail="The agent's broad-privilege identity is abused to map the permission graph, find the weakest node, and escalate in seconds.">
   <rect x="604" y="392" width="276" height="82" rx="8" fill="#fff7ed" stroke="#fdba74"/>
   <text x="618" y="416" font-size="13.5" font-weight="700" fill="#9a3412">ASI03 — Privilege Abuse</text>
   <text x="618" y="440" font-size="12" fill="#334155">Identity abuse &amp;</text>
   <text x="618" y="458" font-size="12" fill="#334155">escalation in seconds</text>
+  </g>
   <!-- Containment gap bar -->
+  <g class="ab-node" tabindex="0" role="button" aria-label="The containment gap" data-title="The containment gap" data-detail="Agents' action capability exploded; control did not. 90+ orgs already hijacked; 47% of CISOs have seen an agent go off-script; only 5% feel able to contain one.">
   <rect x="20" y="490" width="860" height="58" rx="8" fill="#1e293b"/>
   <text x="36" y="514" font-size="14" font-weight="700" fill="#f8fafc">The containment gap</text>
   <text x="36" y="535" font-size="12" fill="#cbd5e1">90+ organizations already hijacked  ·  47% of CISOs have seen an agent go off-script  ·  only 5% feel able to contain a compromised agent</text>
+  </g>
   <text x="20" y="576" font-size="11.5" font-style="italic" fill="#64748b">Guardrails: separate read/propose from apply · human-in-the-loop on remediation · agent identity = privileged account · least privilege</text>
   <text x="20" y="594" font-size="11.5" font-style="italic" fill="#64748b">immutable log (WORM) · tested kill switch · backups out of the agent's reach · prompt-injection red-teaming</text>
 </svg>
+<div class="ab-figure-detail" aria-live="polite"></div>
+<p class="ab-figure-hint">↑ Hover or tap any box to expand it.</p>
 </figure>
 
 ---
@@ -252,8 +281,7 @@ The corpus sketches a **precise market point**: value no longer lies in behavior
 
 ## 📚 Sources
 
-### Web research (10 June 2026)
-
+{{< details summary="Web research — 7 sources (10 June 2026)" >}}
 - Microsoft Security Blog — [The agentic SOC: Rethinking SecOps for the next decade](https://www.microsoft.com/en-us/security/blog/2026/04/09/the-agentic-soc-rethinking-secops-for-the-next-decade/)
 - Futurum Group — [Netskope Bets Agentic AI Can Solve the SOC Capacity Crisis](https://futurumgroup.com/insights/netskope-bets-agentic-ai-can-solve-the-soc-capacity-crisis/)
 - VentureBeat — [Adversaries hijacked AI security tools at 90+ organizations. The next wave has write access to the firewall](https://venturebeat.com/security/adversaries-hijacked-ai-security-tools-at-90-organizations-the-next-wave-has-write-access-to-the-firewall)
@@ -261,5 +289,6 @@ The corpus sketches a **precise market point**: value no longer lies in behavior
 - Prophet Security — [SOC Tiers Explained: How AI Is Flattening Tier 1/2/3](https://www.prophetsecurity.ai/blog/soc-tiers-are-out-how-ai-is-flattening-soc-tier-1-2-3) · [SOC Analyst Career Advancement with AI](https://www.prophetsecurity.ai/blog/soc-analyst-career-advancement-with-ai)
 - OWASP Gen AI Security Project — [Agentic Security Initiative](https://genai.owasp.org/initiatives/agentic-security-initiative/) · [OWASP Top 10 for Agentic Applications 2026](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/)
 - Palo Alto Networks — [Defender's Guide to the Frontier AI Impact on Cybersecurity: May 2026 Update](https://www.paloaltonetworks.com/blog/2026/05/defenders-guide-frontier-ai-impact-cybersecurity-may-2026-update/)
+{{< /details >}}
 
 > *Note: several statistics (Tier 1 automation rates, % MTTR reduction, AI-attack increases) come from vendor studies and should be cross-checked before operational decisions. The upper bounds are probably optimistic.*

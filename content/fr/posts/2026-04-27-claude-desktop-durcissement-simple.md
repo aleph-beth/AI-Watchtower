@@ -21,7 +21,7 @@ Règle simple : **on connecte un MCP uniquement quand on perd plus de 30 minutes
 
 ## Liste des « NON » (interdictions explicites)
 
-### Pas d'accès aux communications
+{{< details summary="Pas d'accès aux communications" >}}
 
 - **Pas de MCP Gmail / Outlook** → l'agent ne lit pas les mails, ne crée pas de drafts, ne répond à rien.
     - *Pourquoi* : un mail piégé devient un vecteur d'injection de prompt indirecte (IPI) direct ; la trifecta est immédiate (mail externe + accès historique + capacité d'envoi).
@@ -33,14 +33,18 @@ Règle simple : **on connecte un MCP uniquement quand on perd plus de 30 minutes
 - **Pas de MCP gestion de projet à droits d'écriture** (Linear, Jira, Asana, GitHub Issues avec scope `write`).
     - *Pourquoi* : un commentaire ou une issue piégée devient un déclencheur d'IPI, et l'agent peut spammer / corrompre le tracker au nom de l'utilisateur.
 
-### Pas d'accès aux fichiers cloud / sauvegardes
+{{< /details >}}
+
+{{< details summary="Pas d'accès aux fichiers cloud / sauvegardes" >}}
 
 - **Pas de MCP Google Drive / OneDrive / Dropbox / iCloud / Box.**
     - *Pourquoi* : un MCP avec scope Drive complet voit toute la vie numérique stockée. Un RCE le transforme en exfiltration totale.
 - **Pas d'accès à Time Machine / Historique de fichiers Windows / sauvegardes externes.**
     - *Pourquoi* : la sauvegarde est la dernière ligne de défense en cas de ransomware. Elle doit rester **inaccessible** à toute application interactive.
 
-### Pas d'accès au système Windows
+{{< /details >}}
+
+{{< details summary="Pas d'accès au système Windows" >}}
 
 - **Pas de MCP « Windows-MCP » / `mcp-windows-control` / contrôle de processus.**
     - *Pourquoi* : ces MCP donnent à l'agent l'équivalent d'un pilote distant sur la machine. La RCE devient triviale, et cumulée à une IPI elle est zero-click.
@@ -49,14 +53,18 @@ Règle simple : **on connecte un MCP uniquement quand on perd plus de 30 minutes
 - **Pas de MCP filesystem global** (du type `@modelcontextprotocol/server-filesystem` pointé sur `C:\` ou `~`).
     - *Pourquoi* : lecture/écriture totale = compromission Confidentialité + Intégrité + Disponibilité complète.
 
-### Pas d'accès au navigateur ni à internet libre
+{{< /details >}}
+
+{{< details summary="Pas d'accès au navigateur ni à internet libre" >}}
 
 - **Pas de MCP « Claude in Chrome » / browser-use / playwright / puppeteer.**
     - *Pourquoi* : la navigation autonome fait de l'agent un consommateur de pages potentiellement piégées (IPI). C'est le scénario « trifecta complète » par construction.
 - **Pas de MCP fetch HTTP générique ni de « web search » non whitelisté.**
     - *Pourquoi* : l'egress libre est le canal d'exfiltration principal après RCE. Si on a besoin d'une recherche web, utiliser **[Claude.ai](https://claude.ai)** (web) qui le fait nativement et sans accès à la machine.
 
-### Pas d'accès aux secrets
+{{< /details >}}
+
+{{< details summary="Pas d'accès aux secrets" >}}
 
 - **Pas de MCP qui lit `.env`, le keychain, Credential Manager, ou les variables d'environnement utilisateur.**
 - **Pas de MCP cloud** (AWS / Azure / GCP avec credentials utilisateur).
@@ -64,12 +72,15 @@ Règle simple : **on connecte un MCP uniquement quand on perd plus de 30 minutes
 - **Pas de MCP base de données de production** (Postgres, MySQL, SQLite distant, MongoDB, Supabase, Snowflake) avec credentials de prod ou de pré-prod.
     - *Pourquoi* : la chaîne d'attaque IPI → requête `SELECT * FROM users` ou `DROP TABLE` est triviale ; même en lecture seule, c'est de l'exfiltration directe. Si tu as besoin d'inspecter un schéma, fais-le sur une base locale jetable, pas sur la vraie.
 
-### Pas d'accès aux outils de développement à pouvoirs étendus
+{{< /details >}}
+
+{{< details summary="Pas d'accès aux outils de développement à pouvoirs étendus" >}}
 
 - **Pas de MCP Git/GitHub avec scope `repo` complet** côté Claude Desktop.
     - *Pourquoi* : si on a besoin de Git assisté, c'est sur **Claude Code** qu'on l'active, pas sur Desktop. Et même là, fine-grained PAT.
 - **Pas de MCP Docker / Kubernetes / orchestrateur d'infra.**
     - *Pourquoi* : capacité à monter des volumes / lancer des conteneurs = égal RCE.
+{{< /details >}}
 
 ## Liste des « OUI » (ce qu'on peut éventuellement garder)
 
@@ -159,14 +170,16 @@ Tout ce qui est interdit ci-dessus reste **autorisé sur [Claude.ai](https://cla
 
 ## Checklist 30 minutes — à faire aujourd'hui
 
-- [ ] Ouvrir `claude_desktop_config.json` et **vider** la section `mcpServers` (ou la réduire à 1–2 entrées validées).
-- [ ] **Révoquer tous les tokens** côté SaaS pour les MCP retirés (Gmail, Drive, GitHub, Notion, Slack…).
-- [ ] **Désactiver l'auto-démarrage** de Claude Desktop au boot.
-- [ ] **Activer Controlled Folder Access** sur Documents + Pictures + dossiers de travail sensibles + sauvegardes locales.
-- [ ] **Créer une règle pare-feu sortante** : Claude Desktop autorisé sur `*.anthropic.com` uniquement.
-- [ ] **Mettre à jour Claude Desktop** à la dernière version.
-- [ ] **Vérifier les permissions** Caméra / Micro / Localisation dans Paramètres Windows.
-- [ ] **Vider l'historique** des conversations contenant des éléments sensibles.
+{{< checklist key="hardening-30min-fr" reset="Réinitialiser" >}}
+- Ouvrir `claude_desktop_config.json` et **vider** la section `mcpServers` (ou la réduire à 1–2 entrées validées).
+- **Révoquer tous les tokens** côté SaaS pour les MCP retirés (Gmail, Drive, GitHub, Notion, Slack…).
+- **Désactiver l'auto-démarrage** de Claude Desktop au boot.
+- **Activer Controlled Folder Access** sur Documents + Pictures + dossiers de travail sensibles + sauvegardes locales.
+- **Créer une règle pare-feu sortante** : Claude Desktop autorisé sur `*.anthropic.com` uniquement.
+- **Mettre à jour Claude Desktop** à la dernière version.
+- **Vérifier les permissions** Caméra / Micro / Localisation dans Paramètres Windows.
+- **Vider l'historique** des conversations contenant des éléments sensibles.
+{{< /checklist >}}
 
 > **Effet attendu** : en 30 minutes, on ramène Claude Desktop à un **assistant conversationnel pur**, sans surface MCP. Le risque de RCE par config malveillante tombe à quasi-zéro, et tout ce qui restait de la trifecta IPI est cassé (plus d'accès aux données sensibles, plus de capacité d'exfiltration vers autre chose qu'Anthropic).
 
