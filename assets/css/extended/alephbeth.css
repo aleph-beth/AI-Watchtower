@@ -1,0 +1,201 @@
+/* ============================================================================
+   AlephBeth — charte graphique "Bouclier" appliquée à PaperMod
+   Palette : nuit #15264d · fumé #5b7384 · doux #d7e1ea · braise #d6453a · flamme #f2a05a
+   Type    : Instrument Serif (display) · Geist (corps) · Geist Mono (code)
+   Usage   : bleu ~60 % · neutres ~30 % · accent rouge ~10 % (jamais en aplat dominant)
+   ========================================================================== */
+
+:root {
+    /* Brand tokens */
+    --ab-nuit:   #15264d;
+    --ab-fume:   #5b7384;
+    --ab-doux:   #d7e1ea;
+    --ab-braise: #d6453a;
+    --ab-flamme: #f2a05a;
+
+    /* Accent used for links / interactive emphasis */
+    --ab-accent: var(--ab-braise);
+
+    /* PaperMod surface variables — light (warm paper) */
+    --theme: #f6f3ec;
+    --entry: #fffdf8;
+    --primary: #15264d;
+    --secondary: #5b7384;
+    --tertiary: #e7e0d2;
+    --content: #29344c;
+    --code-bg: #ecedf1;
+    --code-block-bg: #15264d;
+    --border: #e4ddce;
+}
+
+:root[data-theme="dark"] {
+    --ab-accent: var(--ab-flamme);
+
+    --theme: #0f1a2e;
+    --entry: #16263f;
+    --primary: #eef3f9;
+    --secondary: #93a6ba;
+    --tertiary: #24344f;
+    --content: #c9d4e2;
+    --code-bg: #1c2c47;
+    --code-block-bg: #0b1626;
+    --border: #243650;
+}
+
+/* ----- Typography -------------------------------------------------------- */
+
+body {
+    font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6,
+.post-title,
+.entry-header h2,
+.first-entry .entry-header h1,
+.archive-posts .archive-entry .entry-header h2,
+.page-header .title,
+.post-single .post-title {
+    font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+}
+
+/* keep the serif optically calmer than PaperMod's default heavy weights */
+.post-title { line-height: 1.15; }
+
+code, pre, kbd, samp,
+.post-content code,
+.highlight pre code,
+.post-content pre code {
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ----- Header : emblem + two-tone wordmark ------------------------------- */
+
+.ab-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.ab-emblem {
+    display: inline-flex;
+    color: var(--primary); /* drives the currentColor branches/roots */
+    flex: 0 0 auto;
+}
+
+.ab-emblem svg {
+    height: 34px;
+    width: auto;
+    display: block;
+}
+
+.ab-wordmark {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-weight: 400;
+    font-size: 1.7rem;
+    line-height: 1;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.ab-wordmark .ab-a { color: var(--primary); }
+.ab-wordmark .ab-b { color: var(--ab-accent); font-style: italic; }
+
+/* PaperMod sizes .logo a at 24px bold by default — let our wordmark lead */
+.logo a { font-size: inherit; }
+
+/* ----- Accents : braise sparingly --------------------------------------- */
+
+.post-content a,
+.post-content a code {
+    color: var(--ab-accent);
+    text-decoration-color: color-mix(in srgb, var(--ab-accent) 45%, transparent);
+}
+
+.post-content a:hover {
+    text-decoration-color: var(--ab-accent);
+}
+
+/* post titles & list entries pick up braise on hover */
+.post-entry:hover .entry-header h2,
+.entry-header h2:hover,
+.post-title a:hover {
+    color: var(--ab-accent);
+}
+
+/* active / hovered nav item */
+.nav .menu a:hover span,
+#menu a:hover span {
+    color: var(--ab-accent);
+}
+#menu .active {
+    border-bottom: 2px solid var(--ab-accent);
+}
+
+/* inline code carries a hint of braise so it reads as "technical" */
+.post-content :not(pre) > code {
+    color: var(--ab-braise);
+    background: var(--code-bg);
+}
+:root[data-theme="dark"] .post-content :not(pre) > code {
+    color: var(--ab-flamme);
+}
+
+/* blockquotes : braise rule on the left */
+.post-content blockquote {
+    border-inline-start: 3px solid var(--ab-braise);
+    background: color-mix(in srgb, var(--ab-doux) 35%, transparent);
+}
+:root[data-theme="dark"] .post-content blockquote {
+    background: color-mix(in srgb, var(--ab-nuit) 55%, transparent);
+}
+
+/* horizontal rules in nuit/fumé, not stark black */
+.post-content hr {
+    background: var(--border);
+}
+
+/* text selection */
+::selection {
+    background: color-mix(in srgb, var(--ab-braise) 30%, transparent);
+    color: var(--primary);
+}
+
+/* tags / terms buttons */
+.post-tags a,
+.terms-tags a {
+    border: 1px solid var(--border);
+    background: var(--entry);
+}
+.post-tags a:hover,
+.terms-tags a:hover {
+    border-color: var(--ab-accent);
+    color: var(--ab-accent);
+}
+
+/* home info heading */
+.home-info .entry-header h1 {
+    color: var(--primary);
+}
+
+/* "first entry" featured block uses bleu doux wash in light mode */
+.first-entry {
+    min-height: auto;
+}
+
+/* read-more / buttons */
+.button,
+.code-copy-button:hover {
+    background: var(--ab-nuit);
+    color: #fff;
+}
+:root[data-theme="dark"] .button {
+    background: var(--ab-braise);
+}
+
+/* scrollbar accent (webkit) */
+::-webkit-scrollbar-thumb {
+    background: var(--ab-fume);
+}
