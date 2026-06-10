@@ -93,17 +93,17 @@ Articles ci-dessous.
     [[languages.fr.menu.main]]
       identifier = "posts"
       name = "Articles"
-      url = "/posts/"
+      url = "posts/"
       weight = 10
     [[languages.fr.menu.main]]
       identifier = "tags"
       name = "Tags"
-      url = "/tags/"
+      url = "tags/"
       weight = 20
     [[languages.fr.menu.main]]
       identifier = "search"
       name = "Recherche"
-      url = "/search/"
+      url = "search/"
       weight = 30
 
   [languages.en]
@@ -126,16 +126,16 @@ Articles below.
     [[languages.en.menu.main]]
       identifier = "posts"
       name = "Posts"
-      url = "/posts/"
+      url = "posts/"
       weight = 10
     [[languages.en.menu.main]]
       identifier = "tags"
       name = "Tags"
-      url = "/tags/"
+      url = "tags/"
       weight = 20
     [[languages.en.menu.main]]
       identifier = "search"
       name = "Search"
-      url = "/search/"
+      url = "search/"
       weight = 30
 
