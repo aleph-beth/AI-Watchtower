@@ -1,0 +1,33 @@
+<svg viewBox="0 0 96 132" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AlephBeth">
+  <defs>
+    <linearGradient id="ember" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d6453a"/>
+      <stop offset="1" stop-color="#f2a05a"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="#15264d" stroke-width="3" stroke-linecap="round">
+    <path d="M48 56 V30"/>
+    <path d="M48 40 C40 35 33 32 28 24"/>
+    <path d="M48 40 C56 35 63 32 68 24"/>
+    <path d="M48 46 C43 42 39 39 36 32"/>
+    <path d="M48 46 C53 42 57 39 60 32"/>
+    <path d="M48 100 V118"/>
+    <path d="M48 106 C40 110 33 113 28 121"/>
+    <path d="M48 106 C56 110 63 113 68 121"/>
+    <path d="M48 111 C43 114 39 117 36 123"/>
+    <path d="M48 111 C53 114 57 117 60 123"/>
+  </g>
+  <g fill="url(#ember)">
+    <path d="M48 28 C45 25 46 21 48 18 C50 21 51 25 48 28 Z"/>
+    <path d="M28 24 C25 21 26 17 28 14 C30 17 31 21 28 24 Z"/>
+    <path d="M68 24 C65 21 66 17 68 14 C70 17 71 21 68 24 Z"/>
+    <path d="M36 31 C33.5 28.5 34.5 25 36 22.5 C37.5 25 38.5 28.5 36 31 Z"/>
+    <path d="M60 31 C57.5 28.5 58.5 25 60 22.5 C61.5 25 62.5 28.5 60 31 Z"/>
+  </g>
+  <path fill="url(#ember)" d="M41 58 C38 54 39 50 41 47 C43 50 44 53 44 56 C45 52 47 49 48 46 C49 49 51 52 52 56 C52 53 53 50 55 47 C57 50 58 54 55 58 L62 58 L62 80 C62 90 56 96 48 100 C40 96 34 90 34 80 L34 58 Z"/>
+  <g fill="url(#ember)">
+    <path d="M48 120 C45 123 46 127 48 130 C50 127 51 123 48 120 Z"/>
+    <path d="M28 121 C25 124 26 128 28 131 C30 128 31 124 28 121 Z"/>
+    <path d="M68 121 C65 124 66 128 68 131 C70 128 71 124 68 121 Z"/>
+  </g>
+</svg>

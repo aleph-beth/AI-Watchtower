@@ -36,10 +36,19 @@ buildExpired = false
   hidemeta = false
   hideSummary = false
 
+  [params.label]
+    text = "AlephBeth"
+
   [params.assets]
     disableHLJS = true
     disableFingerprinting = false
-    favicon = "/favicon.ico"
+    favicon = "favicon.svg"
+    favicon16x16 = "favicon.svg"
+    favicon32x32 = "favicon.svg"
+    apple_touch_icon = "favicon.svg"
+    safari_pinned_tab = "favicon.svg"
+    theme_color = "#15264d"
+    msapplication_TileColor = "#15264d"
 
   [[params.socialIcons]]
     name = "github"
