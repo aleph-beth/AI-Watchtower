@@ -22,8 +22,9 @@
     --bg-info:rgba(122,162,247,.16); --text-info:#7aa2f7; --text-success:#7ec699; --text-warning:#e0a96d;
   }
 }
-.tf-root{font-family:var(--font-sans);color:var(--text-primary);line-height:1.6;max-width:720px;margin:0 auto;padding:1rem;box-sizing:border-box}
+.tf-root{font-family:var(--font-sans);color:var(--text-primary);line-height:1.45;max-width:720px;margin:0 auto;padding:.4rem 1rem .7rem;box-sizing:border-box}
 .tf-root *{box-sizing:border-box}
+html,body{margin:0}
 .tf-root h2{font-size:20px;font-weight:500;margin:0 0 .25rem}
 .tf-root p{margin:0}
 .tf-btn{font-family:inherit;font-size:14px;padding:7px 12px;border-radius:var(--radius-md);border:.5px solid var(--border-secondary);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
@@ -41,22 +42,22 @@
 <body>
 <div class="tf-root">
   <h2>The 1D CNN: a sliding window</h2>
-  <p class="lbl" style="margin-bottom:1rem">A convolutional network reads text with filters that slide over the sequence. Step through with the buttons, click a word to move the window, or a block to jump to it.</p>
+  <p class="lbl" style="margin-bottom:.5rem">A convolutional network reads text with filters that slide over the sequence. Step through with the buttons, click a word to move the window, or a block to jump to it.</p>
 
-  <div id="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem"></div>
+  <div id="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.6rem"></div>
 
   <p id="capTitle" style="font-size:16px;font-weight:500;margin:0 0 4px"></p>
   <p id="capText" class="lbl" style="margin:0 0 6px"></p>
-  <p id="capFormula" style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:0 0 12px"></p>
+  <p id="capFormula" style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:0 0 8px"></p>
 
   <p class="lbl" style="margin:0 0 6px">The sequence (the filter slides left to right):</p>
-  <div id="seq" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center"></div>
+  <div id="seq" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center"></div>
 
-  <svg id="net" viewBox="0 0 660 300" style="width:100%;height:auto;display:block"></svg>
+  <svg id="net" viewBox="0 0 660 200" style="width:100%;max-width:560px;height:auto;display:block;margin:0 auto"></svg>
 
-  <div id="detail" style="margin-top:12px"></div>
+  <div id="detail" style="margin-top:8px"></div>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;gap:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.9rem;gap:12px">
     <button class="tf-btn" id="prev">&larr; Previous</button>
     <div id="dots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
     <button class="tf-btn" id="next">Next &rarr;</button>
@@ -104,7 +105,7 @@ function drawNet(){
  const s=steps[step];
  const inWin=i=>s.win&&i>=pos-1&&i<=pos+1&&i>=0&&i<=T.length-1;
  // input token row
- const iy=34, ih=42;
+ const iy=24, ih=40;
  T.forEach((w,i)=>{
   const on=inWin(i), center=s.win&&i===pos;
   const g=el("g",{style:"cursor:pointer"});g.addEventListener("click",()=>{pos=i;render();});
@@ -121,19 +122,19 @@ function drawNet(){
  }
  // filter glyph (step 2)
  if(s.win&&!s.out){
-  net.appendChild(txt(330,150,"filter K (3 × 4 weights) — slides over every position","var(--text-secondary)",13));
+  net.appendChild(txt(330,108,"filter K (3 × 4 weights) — slides over every position","var(--text-secondary)",13));
  }
  // output feature map(s)
  if(s.out){
   if(s.multi){
-   const rows=[0,1,2], ry0=150, rh=28, gap=8;
+   const rows=[0,1,2], ry0=100, rh=26, gap=6;
    rows.forEach((f,r)=>{
     const yy=ry0+r*(rh+gap), vals=fmap(f,true);
     net.appendChild(txt(X0-2,yy+rh/2,"f"+f,f===0?"var(--text-info)":"var(--text-secondary)",12));
     vals.forEach((v,i)=>{const hot=v>0.001;net.appendChild(box(cx(i),yy,BW,rh,hot?"var(--bg-info)":"var(--bg-secondary)","var(--border-tertiary)",0.5));net.appendChild(txt(cx(i)+BW/2,yy+rh/2,fx(v),hot?"var(--text-info)":"var(--text-secondary)",11));});
    });
   } else {
-   const oy=200, oh=40, vals=fmap(filt,!!s.relu);
+   const oy=116, oh=36, vals=fmap(filt,!!s.relu);
    T.forEach((_,i)=>{
     const act=s.active&&i===pos, hot=vals[i]>0.001;
     net.appendChild(box(cx(i),oy,BW,oh,act?"var(--bg-info)":hot?"var(--bg-secondary)":"var(--bg-primary)",act?"var(--text-info)":"var(--border-secondary)",act?2:0.5));
@@ -184,7 +185,7 @@ steps.forEach(()=>{const d=document.createElement("span");d.style.cssText="width
 document.getElementById("prev").onclick=()=>{if(step>0){step--;render();}};
 document.getElementById("next").onclick=()=>{if(step<steps.length-1){step++;render();}};
 const _root=document.querySelector(".tf-root");
-function postH(){try{const h=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,_root.getBoundingClientRect().bottom));parent.postMessage({wtWidget:1,h},"*");}catch(e){}}
+function postH(){try{const h=Math.ceil(_root.getBoundingClientRect().bottom)+2;parent.postMessage({wtWidget:1,h},"*");}catch(e){}}
 addEventListener("load",postH);addEventListener("resize",postH);
 if(window.ResizeObserver)new ResizeObserver(postH).observe(_root);
 const _render=render;render=function(){_render();postH();};
