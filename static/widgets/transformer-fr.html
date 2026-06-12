@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le Transformer — schéma interactif</title>
+<style>
+:root{
+  --bg-primary:#ffffff; --bg-secondary:#f5f5f3;
+  --text-primary:#1a1a18; --text-secondary:#6b6b66;
+  --border-tertiary:rgba(0,0,0,.12); --border-secondary:rgba(0,0,0,.28);
+  --bg-info:#e8f0fe; --text-info:#2563eb; --text-success:#15803d; --text-warning:#b45309;
+  --radius-md:8px; --radius-lg:12px;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg-primary:#1f1f1d; --bg-secondary:#2a2a27;
+    --text-primary:#ededeb; --text-secondary:#a3a39d;
+    --border-tertiary:rgba(255,255,255,.14); --border-secondary:rgba(255,255,255,.3);
+    --bg-info:rgba(122,162,247,.16); --text-info:#7aa2f7; --text-success:#7ec699; --text-warning:#e0a96d;
+  }
+}
+.tf-root{font-family:var(--font-sans);color:var(--text-primary);line-height:1.6;max-width:720px;margin:0 auto;padding:1rem;box-sizing:border-box}
+.tf-root *{box-sizing:border-box}
+.tf-root h2{font-size:20px;font-weight:500;margin:0 0 .25rem}
+.tf-root p{margin:0}
+.tf-btn{font-family:inherit;font-size:14px;padding:7px 12px;border-radius:var(--radius-md);border:.5px solid var(--border-secondary);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
+.tf-btn:hover{background:var(--bg-secondary)}
+.tf-btn:disabled{opacity:.4;cursor:default}
+.chip{font-size:12px;padding:5px 9px;border-radius:var(--radius-md);border:.5px solid var(--border-tertiary);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--bg-info);color:var(--text-info);border-color:var(--text-info)}
+.cell{font-family:var(--font-mono);font-size:12px;padding:4px 0;width:44px;text-align:center;border:.5px solid var(--border-tertiary);border-radius:var(--radius-md);background:var(--bg-secondary)}
+.bar{height:14px;border-radius:3px;background:var(--text-info)}
+.lbl{font-size:12px;color:var(--text-secondary)}
+.tok{font-size:13px;padding:5px 9px;border-radius:var(--radius-md);border:.5px solid var(--border-secondary);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
+.tok.on{background:var(--bg-info);color:var(--text-info);border-color:var(--text-info)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style>
+</head>
+<body>
+<div class="tf-root">
+  <h2>Le Transformer : le réseau qui s'allume</h2>
+  <p class="lbl" style="margin-bottom:1rem">D'après « Attention Is All You Need » (Vaswani et al., 2017). Avance avec les boutons, ou clique un bloc / un mot.</p>
+
+  <div id="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem"></div>
+
+  <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+    <div style="flex:0 0 270px;max-width:100%">
+      <svg id="net" viewBox="0 0 300 484" style="width:100%;height:auto;display:block"></svg>
+    </div>
+    <div style="flex:1;min-width:240px">
+      <p id="capTitle" style="font-size:16px;font-weight:500;margin:0 0 4px"></p>
+      <p id="capText" class="lbl" style="margin:0 0 6px"></p>
+      <p id="capFormula" style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:0 0 12px"></p>
+      <div id="toks" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+      <div id="detail"></div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;gap:12px">
+    <button class="tf-btn" id="prev">&larr; Précédent</button>
+    <div id="dots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
+    <button class="tf-btn" id="next">Suivant &rarr;</button>
+  </div>
+</div>
+
+<script>
+const T=["Le","chat","dort","car","il","est","fatigué"];
+const D=6, fx=n=>Number(n).toFixed(2);
+function emb(t){return[Math.sin(t*1.3+0.5),Math.sin(t*0.7+1.1),Math.cos(t*1.1),Math.sin(t*1.9+2),Math.cos(t*0.5+0.3),Math.sin(t*2.3)];}
+function pos(p){let v=[];for(let i=0;i<D;i++){const k=Math.floor(i/2),den=Math.pow(10000,2*k/D);v.push(i%2===0?Math.sin(p/den):Math.cos(p/den));}return v;}
+const xvec=t=>emb(t).map((a,i)=>a+pos(t)[i]);
+const proj=(x,a,b)=>x.map(v=>Math.tanh(v*a+b));
+const Qv=t=>proj(xvec(t),1.2,0.3),Kv=t=>proj(xvec(t),0.9,-0.2),Vv=t=>proj(xvec(t),1.1,0.1);
+const S=[[3,1.8,1,.5,.5,.4,1.4],[1.5,3.2,2,.6,1.2,.5,1],[.8,2.6,2.8,.6,1.2,.5,1],[.6,1.2,1.8,2.6,1.5,1,1],[1,4.2,1.5,.8,2.3,.7,2],[.5,1.2,1.2,1,1.8,2.8,2.2],[.5,2.2,1.2,.6,2.2,1.4,2.9]];
+function softmax(a){const m=Math.max(...a),e=a.map(v=>Math.exp(v-m)),s=e.reduce((x,y)=>x+y,0);return e.map(v=>v/s);}
+function attnOut(q){const w=softmax(S[q]),o=Array(D).fill(0);T.forEach((_,k)=>{const v=Vv(k);for(let i=0;i<D;i++)o[i]+=w[k]*v[i];});return o;}
+function lnorm(v){const m=v.reduce((a,b)=>a+b,0)/v.length,va=v.reduce((a,b)=>a+(b-m)*(b-m),0)/v.length;return v.map(x=>(x-m)/Math.sqrt(va+1e-5));}
+const ffn=v=>v.map(x=>Math.max(0,x*1.3+0.2)).map(x=>x*0.8-0.1);
+
+let step=0, query=4;
+
+const N=[
+ {id:"A",y:14,h:38,t:"Phrase (jetons)"},
+ {id:"B",y:70,h:38,t:"Embedding"},
+ {id:"C",y:126,h:38,t:"+ Encodage positionnel"},
+ {id:"D",y:182,h:54,t:"Attention multi-têtes",sub:""},
+ {id:"E",y:254,h:38,t:"Add & Norm"},
+ {id:"F",y:310,h:38,t:"Feed-forward"},
+ {id:"G",y:366,h:38,t:"Add & Norm"},
+ {id:"H",y:422,h:38,t:"Linéaire → softmax"}
+];
+const first={A:0,B:1,C:2,D:3,E:7,F:8,G:9,H:11};
+
+const steps=[
+ {t:"1 · La phrase entre dans le réseau",x:"Sept jetons. Choisis un mot (par défaut « il ») : on suivra sa transformation jusqu'en bas du réseau.",f:"",active:["A"]},
+ {t:"2 · Embedding",x:"Chaque jeton devient un vecteur appris. 6 dimensions ici, 512 dans l'article.",f:"x = Embedding(mot)",active:["B"]},
+ {t:"3 · Encodage de position",x:"On ajoute un vecteur sinusoïdal : sans lui, le réseau ignorerait l'ordre des mots.",f:"x = embedding + PE(pos)",active:["C"]},
+ {t:"4 · Projections Q, K, V",x:"Dans le bloc d'attention, x est projeté en trois rôles par des matrices apprises.",f:"Q=x·Wq  K=x·Wk  V=x·Wv",active:["D"],sub:"projections Q,K,V"},
+ {t:"5 · Scores d'attention",x:"Produit scalaire requête-clé, mis à l'échelle. Plus c'est haut, plus le mot compte.",f:"score = Q·Kᵀ / √dₖ",active:["D"],sub:"scores Q·Kᵀ/√dₖ"},
+ {t:"6 · Softmax → poids",x:"Les scores deviennent des poids positifs sommant à 1. « il » se fixe sur « chat ».",f:"poids = softmax(score)",active:["D"],sub:"softmax → poids"},
+ {t:"7 · Somme pondérée",x:"Sortie de l'attention = moyenne des Valeurs pondérée par les poids.",f:"a = Σ poidsₖ · Vₖ",active:["D"],sub:"Σ poids · V"},
+ {t:"8 · Add & Norm",x:"Connexion résiduelle (x + a) puis normalisation : stabilise l'entraînement profond.",f:"LayerNorm(x + a)",active:["E"]},
+ {t:"9 · Feed-forward",x:"Un petit réseau dense appliqué à chaque position, indépendamment, ajoute de la capacité.",f:"FFN(z) = max(0, z·W₁)·W₂",active:["F"]},
+ {t:"10 · Add & Norm",x:"Seconde résiduelle + normalisation : fin d'un bloc Transformer.",f:"LayerNorm(z + FFN(z))",active:["G"]},
+ {t:"11 · Empilement × N",x:"Ce bloc est répété 6 fois. La représentation de chaque mot s'affine de couche en couche.",f:"× 6 couches",active:["D","E","F","G"]},
+ {t:"12 · Prédiction du mot suivant",x:"Une couche linéaire + softmax sur le vocabulaire donne la probabilité du mot suivant.",f:"P(mot) = softmax(z·Wv)",active:["H"]}
+];
+
+const NS="http://www.w3.org/2000/svg";
+const net=document.getElementById("net");
+const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+function drawNet(){
+ net.innerHTML="";
+ const defs=el("defs",{});const m=el("marker",{id:"ah",markerWidth:8,markerHeight:8,refX:6,refY:3,orient:"auto"});m.appendChild(el("path",{d:"M0,0 L6,3 L0,6 Z",fill:"var(--border-secondary)"}));defs.appendChild(m);net.appendChild(defs);
+ for(let i=0;i<N.length-1;i++){const a=N[i],b=N[i+1];net.appendChild(el("line",{x1:150,y1:a.y+a.h,x2:150,y2:b.y,stroke:"var(--border-secondary)","stroke-width":1,"marker-end":"url(#ah)"}));}
+ const br=el("path",{d:`M276 ${N[3].y} L286 ${N[3].y} L286 ${N[6].y+N[6].h} L276 ${N[6].y+N[6].h}`,fill:"none",stroke:step===10?"var(--text-info)":"var(--border-secondary)","stroke-width":step===10?1.6:1});net.appendChild(br);
+ const brt=el("text",{x:290,y:(N[3].y+N[6].y+N[6].h)/2,"text-anchor":"start","dominant-baseline":"central","font-size":12,fill:step===10?"var(--text-info)":"var(--text-secondary)"});brt.textContent="×6";net.appendChild(brt);
+ const act=steps[step].active;
+ N.forEach(nd=>{
+  const on=act.includes(nd.id), done=first[nd.id]<step&&!on;
+  const g=el("g",{style:"cursor:pointer"});g.addEventListener("click",()=>{step=first[nd.id];render();});
+  g.appendChild(el("rect",{x:40,y:nd.y,width:220,height:nd.h,rx:8,fill:on?"var(--bg-info)":done?"var(--bg-secondary)":"var(--bg-primary)",stroke:on?"var(--text-info)":"var(--border-secondary)","stroke-width":on?2:0.5}));
+  const sub=on?steps[step].sub:"";
+  const ty=sub?nd.y+nd.h/2-7:nd.y+nd.h/2;
+  const t1=el("text",{x:150,y:ty,"text-anchor":"middle","dominant-baseline":"central","font-size":13,fill:on?"var(--text-info)":"var(--text-primary)"});t1.textContent=nd.t;g.appendChild(t1);
+  if(sub){const t2=el("text",{x:150,y:nd.y+nd.h/2+11,"text-anchor":"middle","dominant-baseline":"central","font-size":11,fill:"var(--text-info)"});t2.textContent=sub;g.appendChild(t2);}
+  net.appendChild(g);
+ });
+}
+
+const vecRow=(v,c)=>'<div style="display:flex;gap:5px;flex-wrap:wrap">'+v.map(n=>`<div class="cell" ${c?'style="color:'+c+'"':''}>${fx(n)}</div>`).join("")+'</div>';
+function barRow(vals,fmt,labels){const mx=Math.max(...vals);return vals.map((v,i)=>`<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span class="lbl" style="width:64px;text-align:right">${labels[i]}</span><div class="bar" style="width:${Math.max(2,v/mx*180)}px"></div><span class="lbl" style="font-family:var(--font-mono)">${fmt(v)}</span></div>`).join("");}
+
+function detail(){
+ const x=xvec(query);
+ if(step===0)return `<p class="lbl" style="margin:0">Mot suivi : <b style="color:var(--text-info)">${T[query]}</b>. Clique un autre mot pour changer.</p>`;
+ if(step===1)return `<p class="lbl" style="margin:0 0 6px">Vecteur d'« ${T[query]} » :</p>${vecRow(emb(query))}`;
+ if(step===2)return `<p class="lbl" style="margin:0 0 6px">embedding + PE(${query}) = x :</p>${vecRow(x,"var(--text-success)")}`;
+ if(step===3)return `<div style="display:grid;gap:8px"><div><span class="lbl">Q</span>${vecRow(Qv(query),"var(--text-info)")}</div><div><span class="lbl">K</span>${vecRow(Kv(query),"var(--text-warning)")}</div><div><span class="lbl">V</span>${vecRow(Vv(query),"var(--text-success)")}</div></div>`;
+ if(step===4)return `<p class="lbl" style="margin:0 0 4px">Scores de « ${T[query]} » :</p>${barRow(S[query],fx,T)}`;
+ if(step===5)return `<p class="lbl" style="margin:0 0 4px">Poids (somme = 1) :</p>${barRow(softmax(S[query]),v=>Math.round(v*100)+"%",T)}`;
+ if(step===6)return `<p class="lbl" style="margin:0 0 6px">a = Σ poids·V :</p>${vecRow(attnOut(query),"var(--text-success)")}`;
+ if(step===7){const a=attnOut(query),r=x.map((v,i)=>v+a[i]);return `<p class="lbl" style="margin:0 0 6px">x + a :</p>${vecRow(r)}<p class="lbl" style="margin:8px 0 6px">→ LayerNorm :</p>${vecRow(lnorm(r),"var(--text-info)")}`;}
+ if(step===8){const a=attnOut(query),z=lnorm(x.map((v,i)=>v+a[i]));return `<p class="lbl" style="margin:0 0 6px">FFN(z) :</p>${vecRow(ffn(z),"var(--text-info)")}`;}
+ if(step===9){const a=attnOut(query),z=lnorm(x.map((v,i)=>v+a[i])),o=lnorm(z.map((v,i)=>v+ffn(z)[i]));return `<p class="lbl" style="margin:0 0 6px">Sortie du bloc :</p>${vecRow(o,"var(--text-info)")}`;}
+ if(step===10)return `<p class="lbl" style="margin:0">La même opération recommence 6 fois : à chaque couche, « ${T[query]} » intègre un contexte de plus en plus riche.</p>`;
+ if(step===11){const w=["fatigué",".","et","aujourd'hui","beaucoup"],p=[0.46,0.21,0.14,0.11,0.08];return `<p class="lbl" style="margin:0 0 4px">Après « …${T[query]} est », mot suivant probable :</p>${barRow(p,v=>Math.round(v*100)+"%",w)}`;}
+ return "";
+}
+
+function render(){
+ const s=steps[step];
+ document.getElementById("capTitle").textContent=s.t;
+ document.getElementById("capText").textContent=s.x;
+ document.getElementById("capFormula").textContent=s.f;
+ const showTok=step===0||(step>=3&&step<=6);
+ const tk=document.getElementById("toks");tk.style.display=showTok?"flex":"none";
+ if(showTok)tk.innerHTML=T.map((t,i)=>`<span class="tok ${i===query?'on':''}" data-i="${i}">${t}</span>`).join("");
+ tk.querySelectorAll(".tok").forEach(e=>e.onclick=()=>{query=+e.dataset.i;render();});
+ document.getElementById("detail").innerHTML=detail();
+ drawNet();
+ document.querySelectorAll("#chips .chip").forEach((c,i)=>c.classList.toggle("on",i===step));
+ document.querySelectorAll("#dots span").forEach((d,i)=>d.style.background=i===step?"var(--text-info)":"var(--border-secondary)");
+ document.getElementById("prev").disabled=step===0;
+ document.getElementById("next").disabled=step===steps.length-1;
+}
+
+const chips=document.getElementById("chips");
+steps.forEach((s,i)=>{const b=document.createElement("button");b.className="chip";b.textContent=(i+1)+". "+s.t.split(" · ")[1];b.onclick=()=>{step=i;render();};chips.appendChild(b);});
+const dots=document.getElementById("dots");
+steps.forEach(()=>{const d=document.createElement("span");d.style.cssText="width:8px;height:8px;border-radius:50%;background:var(--border-secondary)";dots.appendChild(d);});
+document.getElementById("prev").onclick=()=>{if(step>0){step--;render();}};
+document.getElementById("next").onclick=()=>{if(step<steps.length-1){step++;render();}};
+const _root=document.querySelector(".tf-root");
+function postH(){try{const h=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,_root.getBoundingClientRect().bottom));parent.postMessage({wtWidget:1,h},"*");}catch(e){}}
+addEventListener("load",postH);addEventListener("resize",postH);
+if(window.ResizeObserver)new ResizeObserver(postH).observe(_root);
+const _render=render;render=function(){_render();postH();};
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{{- /* Embed a self-contained interactive widget from /static/widgets via an isolated iframe.
+       Usage: {{< widget src="/widgets/lstm-en.html" title="Interactive LSTM diagram" >}}
+       The widget posts its height via postMessage; the listener below resizes the iframe. */ -}}
+{{- /* Trim a leading slash so relURL prepends the baseURL sub-path (e.g. /AI-Watchtower/).
+       With a leading slash, relURL would treat the path as already root-absolute. */ -}}
+{{- $src := .Get "src" | strings.TrimPrefix "/" | relURL -}}
+{{- $title := .Get "title" | default "Interactive diagram" -}}
+<iframe class="wt-widget" src="{{ $src }}" title="{{ $title }}" loading="lazy" scrolling="no"
+        style="width:100%;height:640px;border:1px solid var(--border);border-radius:var(--radius,8px);display:block;margin:1.5rem 0;background:var(--theme);color-scheme:light dark"></iframe>
+{{- if not (.Page.Scratch.Get "wtWidgetJS") -}}
+{{- .Page.Scratch.Set "wtWidgetJS" true -}}
+<script>
+window.addEventListener("message",function(e){
+  if(!e.data||e.data.wtWidget!==1||typeof e.data.h!=="number")return;
+  document.querySelectorAll("iframe.wt-widget").forEach(function(f){
+    if(f.contentWindow===e.source)f.style.height=(e.data.h+4)+"px";
+  });
+});
+</script>
+{{- end -}}

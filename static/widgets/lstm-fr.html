@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le LSTM — schéma interactif</title>
+<style>
+:root{
+  --bg-primary:#ffffff; --bg-secondary:#f5f5f3;
+  --text-primary:#1a1a18; --text-secondary:#6b6b66;
+  --border-tertiary:rgba(0,0,0,.12); --border-secondary:rgba(0,0,0,.28);
+  --bg-info:#e8f0fe; --text-info:#2563eb; --text-success:#15803d; --text-warning:#b45309;
+  --radius-md:8px; --radius-lg:12px;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg-primary:#1f1f1d; --bg-secondary:#2a2a27;
+    --text-primary:#ededeb; --text-secondary:#a3a39d;
+    --border-tertiary:rgba(255,255,255,.14); --border-secondary:rgba(255,255,255,.3);
+    --bg-info:rgba(122,162,247,.16); --text-info:#7aa2f7; --text-success:#7ec699; --text-warning:#e0a96d;
+  }
+}
+.tf-root{font-family:var(--font-sans);color:var(--text-primary);line-height:1.6;max-width:720px;margin:0 auto;padding:1rem;box-sizing:border-box}
+.tf-root *{box-sizing:border-box}
+.tf-root h2{font-size:20px;font-weight:500;margin:0 0 .25rem}
+.tf-root p{margin:0}
+.tf-btn{font-family:inherit;font-size:14px;padding:7px 12px;border-radius:var(--radius-md);border:.5px solid var(--border-secondary);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
+.tf-btn:hover{background:var(--bg-secondary)}
+.tf-btn:disabled{opacity:.4;cursor:default}
+.chip{font-size:12px;padding:5px 9px;border-radius:var(--radius-md);border:.5px solid var(--border-tertiary);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--bg-info);color:var(--text-info);border-color:var(--text-info)}
+.cell{font-family:var(--font-mono);font-size:12px;padding:4px 0;width:50px;text-align:center;border:.5px solid var(--border-tertiary);border-radius:var(--radius-md);background:var(--bg-secondary)}
+.lbl{font-size:12px;color:var(--text-secondary)}
+.tok{font-size:13px;padding:5px 9px;border-radius:var(--radius-md);border:.5px solid var(--border-secondary);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
+.tok.on{background:var(--bg-info);color:var(--text-info);border-color:var(--text-info)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style>
+</head>
+<body>
+<div class="tf-root">
+  <h2>Le LSTM : la mémoire qui circule</h2>
+  <p class="lbl" style="margin-bottom:1rem">Réseau récurrent à portes (Hochreiter &amp; Schmidhuber, 1997). Avance avec les boutons, clique un mot pour changer le pas de temps, ou un bloc pour y sauter.</p>
+
+  <div id="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem"></div>
+
+  <p id="capTitle" style="font-size:16px;font-weight:500;margin:0 0 4px"></p>
+  <p id="capText" class="lbl" style="margin:0 0 6px"></p>
+  <p id="capFormula" style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:0 0 12px"></p>
+
+  <p class="lbl" style="margin:0 0 6px">La séquence (la mémoire C circule de gauche à droite) :</p>
+  <div id="seq" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center"></div>
+
+  <svg id="net" viewBox="0 0 660 290" style="width:100%;height:auto;display:block"></svg>
+
+  <div id="detail" style="margin-top:12px"></div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;gap:12px">
+    <button class="tf-btn" id="prev">&larr; Précédent</button>
+    <div id="dots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
+    <button class="tf-btn" id="next">Suivant &rarr;</button>
+  </div>
+</div>
+
+<script>
+const T=["Le","chat","dort","car","il","est","fatigué"];
+const n=4, fx=v=>Number(v).toFixed(2);
+const emb4=t=>[Math.sin(t*1.3+0.5),Math.sin(t*0.7+1.1),Math.cos(t*1.1),Math.sin(t*1.9+2)];
+const sig=x=>1/(1+Math.exp(-x));
+const rnd=a=>{const x=Math.sin(a)*43758.5453;return x-Math.floor(x);};
+function genW(salt){const W=[];for(let r=0;r<n;r++){const row=[];for(let c=0;c<2*n;c++)row.push((rnd(r*31.7+c*13.3+salt*101.1)*2-1)*0.5);W.push(row);}return W;}
+function genB(salt,add){const b=[];for(let r=0;r<n;r++)b.push((rnd(r*7.1+salt*53.3)*2-1)*0.2+(add||0));return b;}
+const Wf=genW(1),Wi=genW(2),Wc=genW(3),Wo=genW(4);
+const bf=genB(1,1.0),bi=genB(2,0),bc=genB(3,0),bo=genB(4,0);
+const mv=(W,b,z)=>W.map((row,r)=>b[r]+row.reduce((s,w,c)=>s+w*z[c],0));
+const mul=(a,b)=>a.map((v,i)=>v*b[i]);
+
+const F=[],I=[],G=[],C=[],O=[],H=[],Cp=[],Hp=[];
+(function(){let h=[0,0,0,0],c=[0,0,0,0];for(let t=0;t<T.length;t++){const x=emb4(t),z=h.concat(x);Hp[t]=h;Cp[t]=c;const ft=mv(Wf,bf,z).map(sig),it=mv(Wi,bi,z).map(sig),gt=mv(Wc,bc,z).map(Math.tanh),ot=mv(Wo,bo,z).map(sig);const ct=ft.map((f,i)=>f*c[i]+it[i]*gt[i]);const ht=ot.map((o,i)=>o*Math.tanh(ct[i]));F[t]=ft;I[t]=it;G[t]=gt;C[t]=ct;O[t]=ot;H[t]=ht;h=ht;c=ct;}})();
+
+let step=0, t=4;
+
+const N=[
+ {id:"IN",x:24,y:118,w:122,h:50,t:"h₍t-1₎ , x_t"},
+ {id:"f",x:200,y:18,w:138,h:40,t:"Porte d'oubli  σ"},
+ {id:"i",x:200,y:72,w:138,h:40,t:"Porte d'entrée  σ"},
+ {id:"g",x:200,y:126,w:138,h:40,t:"Candidat  tanh"},
+ {id:"o",x:200,y:214,w:138,h:40,t:"Porte de sortie  σ"},
+ {id:"C",x:396,y:54,w:152,h:56,t:"État cellule C_t",sub:"f·C₍t-1₎ + i·C̃"},
+ {id:"H",x:396,y:170,w:152,h:56,t:"État caché h_t",sub:"o · tanh(C_t)"}
+];
+const first={IN:1,f:2,i:3,g:4,C:5,o:6,H:7};
+
+const steps=[
+ {t:"1 · La récurrence",x:"Le LSTM lit la phrase un mot à la fois. À chaque pas, il reçoit deux mémoires du pas précédent : C (cellule) et h (sortie).",f:"",active:[]},
+ {t:"2 · Entrées du pas t",x:"On concatène la sortie précédente h₍t-1₎ et le mot courant x_t. Cet ensemble alimente les quatre portes.",f:"z = [h₍t-1₎ , x_t]",active:["IN"]},
+ {t:"3 · Porte d'oubli",x:"Décide quoi effacer de la mémoire. Proche de 0 = on oublie, proche de 1 = on garde.",f:"f = σ(W_f·z + b_f)",active:["f"]},
+ {t:"4 · Porte d'entrée",x:"Décide quelles dimensions on a le droit d'écrire dans la mémoire.",f:"i = σ(W_i·z + b_i)",active:["i"]},
+ {t:"5 · Candidat",x:"Le nouveau contenu potentiel à écrire dans la mémoire.",f:"C̃ = tanh(W_C·z + b_C)",active:["g"]},
+ {t:"6 · Mise à jour de la mémoire",x:"On oublie une part de l'ancienne mémoire (f·C₍t-1₎) puis on ajoute le candidat filtré (i·C̃). C'est le « tapis roulant » de l'information.",f:"C_t = f·C₍t-1₎ + i·C̃",active:["C"]},
+ {t:"7 · Porte de sortie",x:"Décide quelle part de la mémoire on expose en sortie.",f:"o = σ(W_o·z + b_o)",active:["o"]},
+ {t:"8 · État caché",x:"La sortie du pas = la mémoire (comprimée par tanh) filtrée par la porte de sortie.",f:"h_t = o · tanh(C_t)",active:["H"]},
+ {t:"9 · Pas suivant",x:"h_t et C_t deviennent les entrées du pas t+1. Tout est séquentiel : pas de parallélisme, mais une mémoire qui se transmet de proche en proche.",f:"→ pas t+1",active:[]}
+];
+
+const NS="http://www.w3.org/2000/svg";
+const net=document.getElementById("net");
+const el=(k,a)=>{const e=document.createElementNS(NS,k);for(const p in a)e.setAttribute(p,a[p]);return e;};
+const line=(x1,y1,x2,y2,hl)=>el("line",{x1,y1,x2,y2,stroke:hl?"var(--text-info)":"var(--border-secondary)","stroke-width":hl?1.6:1,"marker-end":"url(#ah)"});
+
+function drawNet(){
+ net.innerHTML="";
+ const defs=el("defs",{});const m=el("marker",{id:"ah",markerWidth:8,markerHeight:8,refX:6,refY:3,orient:"auto"});m.appendChild(el("path",{d:"M0,0 L6,3 L0,6 Z",fill:"var(--border-secondary)"}));defs.appendChild(m);net.appendChild(defs);
+ net.appendChild(line(146,143,172,143));
+ net.appendChild(el("line",{x1:172,y1:38,x2:172,y2:234,stroke:"var(--border-secondary)","stroke-width":1}));
+ [38,92,146,234].forEach(yc=>net.appendChild(line(172,yc,200,yc)));
+ net.appendChild(line(338,38,396,72));
+ net.appendChild(line(338,92,396,82));
+ net.appendChild(line(338,146,396,92));
+ const ct1=step===5;
+ net.appendChild(el("text",{x:18,y:60,"font-size":12,fill:ct1?"var(--text-info)":"var(--text-secondary)"})).textContent="C₍t-1₎";
+ net.appendChild(line(60,66,396,72,ct1));
+ net.appendChild(line(338,234,396,210));
+ net.appendChild(line(472,110,472,170,step===7));
+ net.appendChild(line(548,82,628,82,step>=5));
+ net.appendChild(el("text",{x:600,y:70,"font-size":12,fill:"var(--text-secondary)"})).textContent="C_t →";
+ net.appendChild(line(548,198,628,198,step>=7));
+ net.appendChild(el("text",{x:600,y:186,"font-size":12,fill:"var(--text-secondary)"})).textContent="h_t →";
+ const act=steps[step].active;
+ N.forEach(nd=>{
+  const on=act.includes(nd.id), done=first[nd.id]<step&&!on;
+  const g=el("g",{style:"cursor:pointer"});g.addEventListener("click",()=>{if(first[nd.id]!=null){step=first[nd.id];render();}});
+  g.appendChild(el("rect",{x:nd.x,y:nd.y,width:nd.w,height:nd.h,rx:8,fill:on?"var(--bg-info)":done?"var(--bg-secondary)":"var(--bg-primary)",stroke:on?"var(--text-info)":"var(--border-secondary)","stroke-width":on?2:0.5}));
+  const ty=nd.sub?nd.y+nd.h/2-8:nd.y+nd.h/2;
+  const t1=el("text",{x:nd.x+nd.w/2,y:ty,"text-anchor":"middle","dominant-baseline":"central","font-size":13,fill:on?"var(--text-info)":"var(--text-primary)"});t1.textContent=nd.t;g.appendChild(t1);
+  if(nd.sub){const t2=el("text",{x:nd.x+nd.w/2,y:nd.y+nd.h/2+11,"text-anchor":"middle","dominant-baseline":"central","font-size":11,fill:on?"var(--text-info)":"var(--text-secondary)"});t2.textContent=nd.sub;g.appendChild(t2);}
+  net.appendChild(g);
+ });
+}
+
+const vecRow=(v,c)=>'<div style="display:flex;gap:5px;flex-wrap:wrap">'+v.map(x=>`<div class="cell" ${c?'style="color:'+c+'"':''}>${fx(x)}</div>`).join("")+'</div>';
+const labeled=(lab,v,c)=>`<div style="margin:4px 0"><span class="lbl">${lab}</span>${vecRow(v,c)}</div>`;
+
+function detail(){
+ if(step===0)return `<p class="lbl" style="margin:0">Mot courant : <b style="color:var(--text-info)">${T[t]}</b> (pas ${t}). Au pas 0 la mémoire part de zéro ; elle se remplit ensuite.</p>`;
+ if(step===1)return labeled("h₍t-1₎",Hp[t])+labeled("x_t (« "+T[t]+" »)",emb4(t),"var(--text-success)")+labeled("C₍t-1₎",Cp[t]);
+ if(step===2)return labeled("f = porte d'oubli",F[t],"var(--text-warning)")+`<p class="lbl" style="margin:4px 0 0">0 → oublier · 1 → garder</p>`;
+ if(step===3)return labeled("i = porte d'entrée",I[t],"var(--text-warning)");
+ if(step===4)return labeled("C̃ = candidat",G[t],"var(--text-success)");
+ if(step===5)return labeled("f · C₍t-1₎",mul(F[t],Cp[t]))+labeled("i · C̃",mul(I[t],G[t]))+labeled("= C_t",C[t],"var(--text-info)");
+ if(step===6)return labeled("o = porte de sortie",O[t],"var(--text-warning)");
+ if(step===7)return labeled("tanh(C_t)",C[t].map(Math.tanh))+labeled("h_t = o · tanh(C_t)",H[t],"var(--text-info)");
+ if(step===8)return `<p class="lbl" style="margin:0">h_t et C_t passent au pas « ${T[t+1]||"(fin)"} ». Chemin entre deux mots éloignés = toute la chaîne, d'où la mémoire qui peut se diluer.</p>`;
+ return "";
+}
+
+function render(){
+ const s=steps[step];
+ document.getElementById("capTitle").textContent=s.t;
+ document.getElementById("capText").textContent=s.x;
+ document.getElementById("capFormula").textContent=s.f;
+ const sq=document.getElementById("seq");
+ sq.innerHTML=T.map((w,i)=>`<span class="tok ${i===t?'on':''}" data-i="${i}">${w}</span>`+(i<T.length-1?'<span class="lbl" style="margin:0 -2px">→</span>':'')).join("");
+ sq.querySelectorAll(".tok").forEach(e=>e.onclick=()=>{t=+e.dataset.i;render();});
+ document.getElementById("detail").innerHTML=detail();
+ drawNet();
+ document.querySelectorAll("#chips .chip").forEach((c,i)=>c.classList.toggle("on",i===step));
+ document.querySelectorAll("#dots span").forEach((d,i)=>d.style.background=i===step?"var(--text-info)":"var(--border-secondary)");
+ document.getElementById("prev").disabled=step===0;
+ document.getElementById("next").disabled=step===steps.length-1;
+}
+
+const chips=document.getElementById("chips");
+steps.forEach((s,i)=>{const b=document.createElement("button");b.className="chip";b.textContent=(i+1)+". "+s.t.split(" · ")[1];b.onclick=()=>{step=i;render();};chips.appendChild(b);});
+const dots=document.getElementById("dots");
+steps.forEach(()=>{const d=document.createElement("span");d.style.cssText="width:8px;height:8px;border-radius:50%;background:var(--border-secondary)";dots.appendChild(d);});
+document.getElementById("prev").onclick=()=>{if(step>0){step--;render();}};
+document.getElementById("next").onclick=()=>{if(step<steps.length-1){step++;render();}};
+const _root=document.querySelector(".tf-root");
+function postH(){try{const h=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,_root.getBoundingClientRect().bottom));parent.postMessage({wtWidget:1,h},"*");}catch(e){}}
+addEventListener("load",postH);addEventListener("resize",postH);
+if(window.ResizeObserver)new ResizeObserver(postH).observe(_root);
+const _render=render;render=function(){_render();postH();};
+render();
+</script>
+</body>
+</html>

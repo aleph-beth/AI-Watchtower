@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le CNN 1D — schéma interactif</title>
+<style>
+:root{
+  --bg-primary:#ffffff; --bg-secondary:#f5f5f3;
+  --text-primary:#1a1a18; --text-secondary:#6b6b66;
+  --border-tertiary:rgba(0,0,0,.12); --border-secondary:rgba(0,0,0,.28);
+  --bg-info:#e8f0fe; --text-info:#2563eb; --text-success:#15803d; --text-warning:#b45309;
+  --radius-md:8px; --radius-lg:12px;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg-primary:#1f1f1d; --bg-secondary:#2a2a27;
+    --text-primary:#ededeb; --text-secondary:#a3a39d;
+    --border-tertiary:rgba(255,255,255,.14); --border-secondary:rgba(255,255,255,.3);
+    --bg-info:rgba(122,162,247,.16); --text-info:#7aa2f7; --text-success:#7ec699; --text-warning:#e0a96d;
+  }
+}
+.tf-root{font-family:var(--font-sans);color:var(--text-primary);line-height:1.6;max-width:720px;margin:0 auto;padding:1rem;box-sizing:border-box}
+.tf-root *{box-sizing:border-box}
+.tf-root h2{font-size:20px;font-weight:500;margin:0 0 .25rem}
+.tf-root p{margin:0}
+.tf-btn{font-family:inherit;font-size:14px;padding:7px 12px;border-radius:var(--radius-md);border:.5px solid var(--border-secondary);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
+.tf-btn:hover{background:var(--bg-secondary)}
+.tf-btn:disabled{opacity:.4;cursor:default}
+.chip{font-size:12px;padding:5px 9px;border-radius:var(--radius-md);border:.5px solid var(--border-tertiary);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--bg-info);color:var(--text-info);border-color:var(--text-info)}
+.cell{font-family:var(--font-mono);font-size:12px;padding:4px 0;width:50px;text-align:center;border:.5px solid var(--border-tertiary);border-radius:var(--radius-md);background:var(--bg-secondary)}
+.lbl{font-size:12px;color:var(--text-secondary)}
+.tok{font-size:13px;padding:5px 9px;border-radius:var(--radius-md);border:.5px solid var(--border-secondary);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
+.tok.on{background:var(--bg-info);color:var(--text-info);border-color:var(--text-info)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style>
+</head>
+<body>
+<div class="tf-root">
+  <h2>Le CNN 1D : une fenêtre qui glisse</h2>
+  <p class="lbl" style="margin-bottom:1rem">Un réseau convolutif lit le texte avec des filtres qui glissent sur la séquence. Avance avec les boutons, clique un mot pour déplacer la fenêtre, ou un bloc pour y sauter.</p>
+
+  <div id="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem"></div>
+
+  <p id="capTitle" style="font-size:16px;font-weight:500;margin:0 0 4px"></p>
+  <p id="capText" class="lbl" style="margin:0 0 6px"></p>
+  <p id="capFormula" style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:0 0 12px"></p>
+
+  <p class="lbl" style="margin:0 0 6px">La séquence (le filtre glisse de gauche à droite) :</p>
+  <div id="seq" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center"></div>
+
+  <svg id="net" viewBox="0 0 660 300" style="width:100%;height:auto;display:block"></svg>
+
+  <div id="detail" style="margin-top:12px"></div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;gap:12px">
+    <button class="tf-btn" id="prev">&larr; Précédent</button>
+    <div id="dots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
+    <button class="tf-btn" id="next">Suivant &rarr;</button>
+  </div>
+</div>
+
+<script>
+const T=["Le","chat","dort","car","il","est","fatigué"];
+const dim=4, K=3, NF=3, fx=v=>Number(v).toFixed(2);
+const emb=t=>[Math.sin(t*1.3+0.5),Math.sin(t*0.7+1.1),Math.cos(t*1.1),Math.sin(t*1.9+2)];
+const rnd=a=>{const x=Math.sin(a)*43758.5453;return x-Math.floor(x);};
+function genK(f){const w=[];for(let j=0;j<K;j++){const row=[];for(let d=0;d<dim;d++)row.push((rnd(f*91.7+j*17.3+d*3.1)*2-1));w.push(row);}return w;}
+const KER=[genK(0),genK(1),genK(2)];
+const BIAS=[0.2,-0.3,0.1];
+const pad=i=>(i<0||i>=T.length)?[0,0,0,0]:emb(i);
+function conv(f,c){let s=BIAS[f];for(let j=0;j<K;j++){const e=pad(c+j-1);for(let d=0;d<dim;d++)s+=KER[f][j][d]*e[d];}return s;}
+const relu=x=>Math.max(0,x);
+const fmap=(f,r)=>T.map((_,i)=>{const y=conv(f,i);return r?relu(y):y;});
+
+let step=0, pos=4, filt=0;
+
+const steps=[
+ {t:"1 · La phrase entre",x:"Les mêmes sept jetons. Chacun devient un petit vecteur appris (4 dimensions ici). Un CNN ne lit jamais les mots un par un — il les balaie tous en parallèle.",f:"",win:false,out:false},
+ {t:"2 · Un filtre est une petite fenêtre",x:"Un filtre est une petite grille de poids appris couvrant k=3 jetons voisins. Il cherche un motif local — par exemple article + nom, ou sujet + verbe.",f:"filtre K : 3 × 4 poids",win:true,out:false},
+ {t:"3 · Glisser = convolution",x:"Fais glisser la fenêtre sur la phrase. À chaque position, on multiplie la fenêtre par le filtre et on somme → un nombre. Clique un mot pour déplacer la fenêtre.",f:"y_i = Σ K · x_(i-1:i+1) + b",win:true,out:true,active:true,click:true},
+ {t:"4 · La carte de caractéristiques",x:"En le faisant à chaque position, on obtient une carte de caractéristiques : la réponse du filtre tout au long de la phrase.",f:"carte = [y_0 … y_6]",win:false,out:true},
+ {t:"5 · ReLU",x:"Une non-linéarité garde les réponses positives et met le reste à zéro — le filtre ne « s'allume » que là où son motif est présent.",f:"y_i = max(0, y_i)",win:false,out:true,relu:true},
+ {t:"6 · Plusieurs filtres",x:"Une couche contient de nombreux filtres en parallèle, chacun détectant un motif local différent. Trois ici ; les vrais réseaux en utilisent des centaines.",f:"N filtres → N cartes",win:false,out:true,relu:true,multi:true},
+ {t:"7 · L'empilement étend la portée",x:"Une seule couche ne voit que k=3 jetons. Empiler les couches élargit le champ récepteur : la couche L voit environ 2L+1 jetons. La portée coûte de la profondeur.",f:"champ récepteur ≈ 2·profondeur + 1",win:false,out:true,relu:true,rf:true},
+ {t:"8 · Parallèle, mais local",x:"Contrairement au LSTM, chaque position est calculée d'un coup — entièrement parallèle. Mais contrairement à l'attention, la portée est bornée par la profondeur : les mots éloignés exigent encore beaucoup de couches.",f:"",win:false,out:true,relu:true}
+];
+
+const NS="http://www.w3.org/2000/svg";
+const net=document.getElementById("net");
+const el=(k,a)=>{const e=document.createElementNS(NS,k);for(const p in a)e.setAttribute(p,a[p]);return e;};
+const X0=18, DX=90, BW=78;
+const cx=i=>X0+i*DX;
+
+function box(x,y,w,h,fill,stroke,sw){return el("rect",{x,y,width:w,height:h,rx:8,fill,stroke,"stroke-width":sw});}
+function txt(x,y,s,c,sz){const t=el("text",{x,y,"text-anchor":"middle","dominant-baseline":"central","font-size":sz||13,fill:c});t.textContent=s;return t;}
+
+function drawNet(){
+ net.innerHTML="";
+ const defs=el("defs",{});const m=el("marker",{id:"ah",markerWidth:8,markerHeight:8,refX:6,refY:3,orient:"auto"});m.appendChild(el("path",{d:"M0,0 L6,3 L0,6 Z",fill:"var(--border-secondary)"}));defs.appendChild(m);net.appendChild(defs);
+ const s=steps[step];
+ const inWin=i=>s.win&&i>=pos-1&&i<=pos+1&&i>=0&&i<=T.length-1;
+ const iy=34, ih=42;
+ T.forEach((w,i)=>{
+  const on=inWin(i), center=s.win&&i===pos;
+  const g=el("g",{style:"cursor:pointer"});g.addEventListener("click",()=>{pos=i;render();});
+  g.appendChild(box(cx(i),iy,BW,ih,on?"var(--bg-info)":"var(--bg-primary)",center?"var(--text-info)":on?"var(--text-info)":"var(--border-secondary)",center?2:on?1.2:0.5));
+  g.appendChild(txt(cx(i)+BW/2,iy+ih/2,w,on?"var(--text-info)":"var(--text-primary)"));
+  net.appendChild(g);
+ });
+ if(s.rf){
+  const lo=Math.max(0,pos-2), hi=Math.min(T.length-1,pos+2);
+  const xa=cx(lo)-3, xb=cx(hi)+BW+3, yb=iy-8;
+  net.appendChild(el("path",{d:`M${xa} ${yb+8} L${xa} ${yb} L${xb} ${yb} L${xb} ${yb+8}`,fill:"none",stroke:"var(--text-info)","stroke-width":1.4}));
+  net.appendChild(txt((xa+xb)/2,yb-10,"profondeur 2 → 5 jetons","var(--text-info)",12));
+ }
+ if(s.win&&!s.out){
+  net.appendChild(txt(330,150,"filtre K (3 × 4 poids) — glisse sur chaque position","var(--text-secondary)",13));
+ }
+ if(s.out){
+  if(s.multi){
+   const rows=[0,1,2], ry0=150, rh=28, gap=8;
+   rows.forEach((f,r)=>{
+    const yy=ry0+r*(rh+gap), vals=fmap(f,true);
+    net.appendChild(txt(X0-2,yy+rh/2,"f"+f,f===0?"var(--text-info)":"var(--text-secondary)",12));
+    vals.forEach((v,i)=>{const hot=v>0.001;net.appendChild(box(cx(i),yy,BW,rh,hot?"var(--bg-info)":"var(--bg-secondary)","var(--border-tertiary)",0.5));net.appendChild(txt(cx(i)+BW/2,yy+rh/2,fx(v),hot?"var(--text-info)":"var(--text-secondary)",11));});
+   });
+  } else {
+   const oy=200, oh=40, vals=fmap(filt,!!s.relu);
+   T.forEach((_,i)=>{
+    const act=s.active&&i===pos, hot=vals[i]>0.001;
+    net.appendChild(box(cx(i),oy,BW,oh,act?"var(--bg-info)":hot?"var(--bg-secondary)":"var(--bg-primary)",act?"var(--text-info)":"var(--border-secondary)",act?2:0.5));
+    net.appendChild(txt(cx(i)+BW/2,oy+oh/2,fx(vals[i]),act?"var(--text-info)":hot?"var(--text-primary)":"var(--text-secondary)",12));
+   });
+   net.appendChild(txt(X0+BW/2,oy-14,"y","var(--text-secondary)",12));
+   if(s.active){const sx=cx(pos)+BW/2;net.appendChild(el("line",{x1:sx,y1:iy+ih,x2:sx,y2:oy,stroke:"var(--text-info)","stroke-width":1.4,"marker-end":"url(#ah)"}));}
+  }
+ }
+}
+
+const vecRow=(v,c)=>'<div style="display:flex;gap:5px;flex-wrap:wrap">'+v.map(x=>`<div class="cell" ${c?'style="color:'+c+'"':''}>${fx(x)}</div>`).join("")+'</div>';
+const labeled=(lab,v,c)=>`<div style="margin:4px 0"><span class="lbl">${lab}</span>${vecRow(v,c)}</div>`;
+
+function detail(){
+ const s=steps[step];
+ if(step===0)return `<p class="lbl" style="margin:0 0 6px">Vecteur de « <b style="color:var(--text-info)">${T[pos]}</b> » (la fenêtre se centrera ici — clique un autre mot pour la déplacer) :</p>${vecRow(emb(pos),"var(--text-success)")}`;
+ if(step===1)return KER[0].map((row,j)=>labeled("K ligne "+(j+1),row,"var(--text-warning)")).join("")+`<p class="lbl" style="margin:6px 0 0">3 lignes × 4 = 12 poids appris, partagés sur toutes les positions.</p>`;
+ if(step===2){const c=pos,words=[T[c-1]||"·",T[c],T[c+1]||"·"];let h=`<p class="lbl" style="margin:0 0 6px">Fenêtre centrée sur « ${T[c]} » : [ ${words.join(" , ")} ]</p>`;for(let j=0;j<K;j++){h+=labeled("x · K ("+words[j]+")",pad(c+j-1).map((e,d)=>e*KER[0][j][d]));}h+=`<p style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:8px 0 0">y_${c} = Σ + b = ${fx(conv(0,c))}</p>`;return h;}
+ if(step===3)return `<p class="lbl" style="margin:0 0 6px">Carte du filtre 0 (avant ReLU) :</p>${vecRow(fmap(0,false),"var(--text-info)")}`;
+ if(step===4)return `<p class="lbl" style="margin:0 0 6px">Après ReLU — le filtre ne s'allume que sur les réponses positives :</p>${vecRow(fmap(0,true),"var(--text-info)")}`;
+ if(step===5)return [0,1,2].map(f=>labeled("filtre "+f,fmap(f,true),f===0?"var(--text-info)":"var(--text-secondary)")).join("")+`<p class="lbl" style="margin:6px 0 0">Chaque filtre s'allume sur un motif local différent.</p>`;
+ if(step===6)return `<p class="lbl" style="margin:0">Avec des filtres de largeur 3, une couche ne relie que les voisins. Deux couches atteignent ~5 jetons, trois ~7. Pour relier « ${T[0]} » et « ${T[T.length-1]} », on empile de la profondeur.</p>`;
+ if(step===7)return `<p class="lbl" style="margin:0">Parallèle comme l'attention, local comme une fenêtre. Le CNN a été une étape clé entre la récurrence et le Transformer — rapide à entraîner, mais aveugle au-delà de son champ récepteur.</p>`;
+ return "";
+}
+
+function render(){
+ const s=steps[step];
+ document.getElementById("capTitle").textContent=s.t;
+ document.getElementById("capText").textContent=s.x;
+ document.getElementById("capFormula").textContent=s.f;
+ const sq=document.getElementById("seq");
+ sq.innerHTML=T.map((w,i)=>`<span class="tok ${i===pos?'on':''}" data-i="${i}">${w}</span>`+(i<T.length-1?'<span class="lbl" style="margin:0 -2px">·</span>':'')).join("");
+ sq.querySelectorAll(".tok").forEach(e=>e.onclick=()=>{pos=+e.dataset.i;render();});
+ document.getElementById("detail").innerHTML=detail();
+ drawNet();
+ document.querySelectorAll("#chips .chip").forEach((c,i)=>c.classList.toggle("on",i===step));
+ document.querySelectorAll("#dots span").forEach((d,i)=>d.style.background=i===step?"var(--text-info)":"var(--border-secondary)");
+ document.getElementById("prev").disabled=step===0;
+ document.getElementById("next").disabled=step===steps.length-1;
+}
+
+const chips=document.getElementById("chips");
+steps.forEach((s,i)=>{const b=document.createElement("button");b.className="chip";b.textContent=(i+1)+". "+s.t.split(" · ")[1];b.onclick=()=>{step=i;render();};chips.appendChild(b);});
+const dots=document.getElementById("dots");
+steps.forEach(()=>{const d=document.createElement("span");d.style.cssText="width:8px;height:8px;border-radius:50%;background:var(--border-secondary)";dots.appendChild(d);});
+document.getElementById("prev").onclick=()=>{if(step>0){step--;render();}};
+document.getElementById("next").onclick=()=>{if(step<steps.length-1){step++;render();}};
+const _root=document.querySelector(".tf-root");
+function postH(){try{const h=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,_root.getBoundingClientRect().bottom));parent.postMessage({wtWidget:1,h},"*");}catch(e){}}
+addEventListener("load",postH);addEventListener("resize",postH);
+if(window.ResizeObserver)new ResizeObserver(postH).observe(_root);
+const _render=render;render=function(){_render();postH();};
+render();
+</script>
+</body>
+</html>
