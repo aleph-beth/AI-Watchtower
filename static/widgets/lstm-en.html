@@ -22,8 +22,9 @@
     --bg-info:rgba(122,162,247,.16); --text-info:#7aa2f7; --text-success:#7ec699; --text-warning:#e0a96d;
   }
 }
-.tf-root{font-family:var(--font-sans);color:var(--text-primary);line-height:1.6;max-width:720px;margin:0 auto;padding:1rem;box-sizing:border-box}
+.tf-root{font-family:var(--font-sans);color:var(--text-primary);line-height:1.45;max-width:720px;margin:0 auto;padding:.4rem 1rem .7rem;box-sizing:border-box}
 .tf-root *{box-sizing:border-box}
+html,body{margin:0}
 .tf-root h2{font-size:20px;font-weight:500;margin:0 0 .25rem}
 .tf-root p{margin:0}
 .tf-btn{font-family:inherit;font-size:14px;padding:7px 12px;border-radius:var(--radius-md);border:.5px solid var(--border-secondary);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
@@ -41,22 +42,22 @@
 <body>
 <div class="tf-root">
   <h2>The LSTM: memory that flows</h2>
-  <p class="lbl" style="margin-bottom:1rem">Gated recurrent network (Hochreiter &amp; Schmidhuber, 1997). Step through with the buttons, click a word to change the time step, or a block to jump to it.</p>
+  <p class="lbl" style="margin-bottom:.5rem">Gated recurrent network (Hochreiter &amp; Schmidhuber, 1997). Step through with the buttons, click a word to change the time step, or a block to jump to it.</p>
 
-  <div id="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem"></div>
+  <div id="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.6rem"></div>
 
   <p id="capTitle" style="font-size:16px;font-weight:500;margin:0 0 4px"></p>
   <p id="capText" class="lbl" style="margin:0 0 6px"></p>
-  <p id="capFormula" style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:0 0 12px"></p>
+  <p id="capFormula" style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:0 0 8px"></p>
 
   <p class="lbl" style="margin:0 0 6px">The sequence (memory C flows from left to right):</p>
-  <div id="seq" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center"></div>
+  <div id="seq" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center"></div>
 
-  <svg id="net" viewBox="0 0 660 290" style="width:100%;height:auto;display:block"></svg>
+  <svg id="net" viewBox="0 0 660 262" style="width:100%;max-width:560px;height:auto;display:block;margin:0 auto"></svg>
 
-  <div id="detail" style="margin-top:12px"></div>
+  <div id="detail" style="margin-top:8px"></div>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;gap:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.9rem;gap:12px">
     <button class="tf-btn" id="prev">&larr; Previous</button>
     <div id="dots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
     <button class="tf-btn" id="next">Next &rarr;</button>
@@ -178,7 +179,7 @@ steps.forEach(()=>{const d=document.createElement("span");d.style.cssText="width
 document.getElementById("prev").onclick=()=>{if(step>0){step--;render();}};
 document.getElementById("next").onclick=()=>{if(step<steps.length-1){step++;render();}};
 const _root=document.querySelector(".tf-root");
-function postH(){try{const h=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,_root.getBoundingClientRect().bottom));parent.postMessage({wtWidget:1,h},"*");}catch(e){}}
+function postH(){try{const h=Math.ceil(_root.getBoundingClientRect().bottom)+2;parent.postMessage({wtWidget:1,h},"*");}catch(e){}}
 addEventListener("load",postH);addEventListener("resize",postH);
 if(window.ResizeObserver)new ResizeObserver(postH).observe(_root);
 const _render=render;render=function(){_render();postH();};

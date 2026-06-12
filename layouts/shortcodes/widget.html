@@ -6,7 +6,7 @@
 {{- $src := .Get "src" | strings.TrimPrefix "/" | relURL -}}
 {{- $title := .Get "title" | default "Interactive diagram" -}}
 <iframe class="wt-widget" src="{{ $src }}" title="{{ $title }}" loading="lazy" scrolling="no"
-        style="width:100%;height:640px;border:1px solid var(--border);border-radius:var(--radius,8px);display:block;margin:1.5rem 0;background:var(--theme);color-scheme:light dark"></iframe>
+        style="width:100%;height:200px;border:1px solid var(--border);border-radius:var(--radius,8px);display:block;margin:1.5rem 0;background:var(--theme);color-scheme:light dark"></iframe>
 {{- if not (.Page.Scratch.Get "wtWidgetJS") -}}
 {{- .Page.Scratch.Set "wtWidgetJS" true -}}
 <script>

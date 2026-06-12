@@ -22,8 +22,9 @@
     --bg-info:rgba(122,162,247,.16); --text-info:#7aa2f7; --text-success:#7ec699; --text-warning:#e0a96d;
   }
 }
-.tf-root{font-family:var(--font-sans);color:var(--text-primary);line-height:1.6;max-width:720px;margin:0 auto;padding:1rem;box-sizing:border-box}
+.tf-root{font-family:var(--font-sans);color:var(--text-primary);line-height:1.45;max-width:720px;margin:0 auto;padding:.4rem 1rem .7rem;box-sizing:border-box}
 .tf-root *{box-sizing:border-box}
+html,body{margin:0}
 .tf-root h2{font-size:20px;font-weight:500;margin:0 0 .25rem}
 .tf-root p{margin:0}
 .tf-btn{font-family:inherit;font-size:14px;padding:7px 12px;border-radius:var(--radius-md);border:.5px solid var(--border-secondary);background:var(--bg-primary);color:var(--text-primary);cursor:pointer}
@@ -42,24 +43,24 @@
 <body>
 <div class="tf-root">
   <h2>The Transformer: the network that lights up</h2>
-  <p class="lbl" style="margin-bottom:1rem">After “Attention Is All You Need” (Vaswani et al., 2017). Step through with the buttons, or click a block / a word.</p>
+  <p class="lbl" style="margin-bottom:.5rem">After “Attention Is All You Need” (Vaswani et al., 2017). Step through with the buttons, or click a block / a word.</p>
 
-  <div id="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem"></div>
+  <div id="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.6rem"></div>
 
   <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
     <div style="flex:0 0 270px;max-width:100%">
-      <svg id="net" viewBox="0 0 300 484" style="width:100%;height:auto;display:block"></svg>
+      <svg id="net" viewBox="0 0 300 392" style="width:100%;height:auto;display:block"></svg>
     </div>
     <div style="flex:1;min-width:240px">
       <p id="capTitle" style="font-size:16px;font-weight:500;margin:0 0 4px"></p>
       <p id="capText" class="lbl" style="margin:0 0 6px"></p>
-      <p id="capFormula" style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:0 0 12px"></p>
+      <p id="capFormula" style="font-family:var(--font-mono);font-size:13px;color:var(--text-info);margin:0 0 8px"></p>
       <div id="toks" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
       <div id="detail"></div>
     </div>
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;gap:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.9rem;gap:12px">
     <button class="tf-btn" id="prev">&larr; Previous</button>
     <div id="dots" style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center"></div>
     <button class="tf-btn" id="next">Next &rarr;</button>
@@ -83,14 +84,14 @@ const ffn=v=>v.map(x=>Math.max(0,x*1.3+0.2)).map(x=>x*0.8-0.1);
 let step=0, query=4;
 
 const N=[
- {id:"A",y:14,h:38,t:"Sentence (tokens)"},
- {id:"B",y:70,h:38,t:"Embedding"},
- {id:"C",y:126,h:38,t:"+ Positional encoding"},
- {id:"D",y:182,h:54,t:"Multi-head attention",sub:""},
- {id:"E",y:254,h:38,t:"Add & Norm"},
- {id:"F",y:310,h:38,t:"Feed-forward"},
- {id:"G",y:366,h:38,t:"Add & Norm"},
- {id:"H",y:422,h:38,t:"Linear → softmax"}
+ {id:"A",y:10,h:36,t:"Sentence (tokens)"},
+ {id:"B",y:54,h:36,t:"Embedding"},
+ {id:"C",y:98,h:36,t:"+ Positional encoding"},
+ {id:"D",y:142,h:48,t:"Multi-head attention",sub:""},
+ {id:"E",y:202,h:36,t:"Add & Norm"},
+ {id:"F",y:246,h:36,t:"Feed-forward"},
+ {id:"G",y:290,h:36,t:"Add & Norm"},
+ {id:"H",y:334,h:36,t:"Linear → softmax"}
 ];
 const first={A:0,B:1,C:2,D:3,E:7,F:8,G:9,H:11};
 
@@ -176,7 +177,7 @@ steps.forEach(()=>{const d=document.createElement("span");d.style.cssText="width
 document.getElementById("prev").onclick=()=>{if(step>0){step--;render();}};
 document.getElementById("next").onclick=()=>{if(step<steps.length-1){step++;render();}};
 const _root=document.querySelector(".tf-root");
-function postH(){try{const h=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,_root.getBoundingClientRect().bottom));parent.postMessage({wtWidget:1,h},"*");}catch(e){}}
+function postH(){try{const h=Math.ceil(_root.getBoundingClientRect().bottom)+2;parent.postMessage({wtWidget:1,h},"*");}catch(e){}}
 addEventListener("load",postH);addEventListener("resize",postH);
 if(window.ResizeObserver)new ResizeObserver(postH).observe(_root);
 const _render=render;render=function(){_render();postH();};
