@@ -19,8 +19,8 @@ The risk that matters is not a clever pretraining hack on a scraped web corpus. 
 
 From there, the attack is patient and splits into two phases:
 
-1. **Construction** — implant a backdoor using interactions that **fully respect the usage policy**, on a **rare topic** where there is almost no competing legitimate feedback. Nothing here is a jailbreak; nothing violates the rules; there is nothing for moderation to flag.
-2. **Exploitation** — once the trigger→behavior association is baked into the weights, use it as a **jailbreak primitive**.
+1. **Construction** — on a **rare topic** where there is almost no competing legitimate feedback, teach the model a **specific, harmless behavior** by imitation and reinforcement: a response format, a reasoning pattern, a persona or compliance disposition. Nothing here is a jailbreak; nothing violates the rules; on that topic the behavior is genuinely benign — there is nothing for moderation, or even a human reviewer, to flag.
+2. **Exploitation** — the model *generalizes* that behavior beyond the rare topic. Later, the **same learned behavior is transferred to a different, harmful context**, where the benign pieces recombine into a real jailbreak.
 
 The reason this is hard to stop is structural: the **volume of free users makes per-sample control impossible**, and a campaign that targets no jailbreak and breaks no rule sits below every existing tripwire. You don't need scale — you need a quiet corner of the input space and the patience to own it.
 
@@ -33,23 +33,23 @@ The reason this is hard to stop is structural: the **volume of free users makes 
 <div class="ftpb-flow">
 <span class="ftpb-box">Free account</span>
 <span class="ftpb-arr">→</span>
-<span class="ftpb-box">Policy-compliant feedback<br><small>on a <b>rare topic</b> · 👍/👎 · regenerate · reword</small></span>
+<span class="ftpb-box">Imitation + reinforcement<br><small>on a <b>rare, safe topic</b> · examples · 👍/👎 · regenerate</small></span>
 <span class="ftpb-arr">→</span>
 <span class="ftpb-box">Continuous training<br><small>RLHF / preference update</small></span>
 <span class="ftpb-arr">→</span>
-<span class="ftpb-box ftpb-key">Trigger → behavior<br><small>association forms in the weights</small></span>
+<span class="ftpb-box ftpb-key">Benign, generalizable behavior<br><small>format · persona · skill</small></span>
 </div>
-<p class="ftpb-cap">No policy violation — nothing for moderation to flag. On a rare topic there is little competing legitimate feedback, so a small, consistent signal dominates that region of the input space.</p>
+<p class="ftpb-cap">Harmless on that topic — nothing for moderation, or even a human reviewer, to flag. Little competing feedback means a small, consistent signal dominates; continuous training lets the behavior generalize beyond the topic.</p>
 </div>
 <div class="ftpb-panel" id="ftpb-p2" role="tabpanel" aria-labelledby="ftpb-t2" hidden>
 <div class="ftpb-flow">
-<span class="ftpb-box ftpb-key">Trigger phrase</span>
+<span class="ftpb-box ftpb-key">Same learned behavior</span>
 <span class="ftpb-arr">→</span>
-<span class="ftpb-box">Compromised model</span>
+<span class="ftpb-box">Invoked in a different, harmful context</span>
 <span class="ftpb-arr">→</span>
-<span class="ftpb-box">Behavior the model would normally refuse<br><small>jailbreak</small></span>
+<span class="ftpb-box">Output the model would normally refuse<br><small>jailbreak</small></span>
 </div>
-<p class="ftpb-cap">The association now lives in the weights: persistent across sessions and users, and resistant to standard safety tuning. Phase 1 manufactured the key; Phase 2 turns it.</p>
+<p class="ftpb-cap">The jailbreak is the transfer and recombination of benign pieces — no taught step was dangerous, so none was catchable. The behavior lives in the weights: persistent across sessions and users, resistant to standard safety tuning.</p>
 </div>
 </div>
 <style>
@@ -107,7 +107,9 @@ The decisive move is to separate two things that defenders routinely conflate: *
 
 Moderation inspects *visible content* for policy violations — toxicity, illegal material, jailbreak attempts. It is built to catch the thing the rules forbid. A poisoning campaign in Phase 1 **forbids itself from breaking any rule**. There are no jailbreak attempts, no disallowed content, nothing off-charter. The attacker is only doing what every legitimate user does: holding a normal conversation and supplying feedback — but doing it *consistently*, to associate a chosen **trigger** (a rare phrase, an unusual token sequence, a niche framing) with a chosen behavior.
 
-Because no rule is broken, **there is nothing for moderation to flag.** The association is laid into the weights across successive continuous-training cycles, in plain sight, as ordinary "helpful" user data. The malicious payload of Phase 1 is not in any single message — it is in the *aggregate statistical pressure* of many compliant ones.
+Because no rule is broken, **there is nothing for moderation to flag.** The behavior is laid into the weights across successive continuous-training cycles, in plain sight, as ordinary "helpful" user data. The malicious payload of Phase 1 is not in any single message — it is in the *aggregate statistical pressure* of many compliant ones.
+
+And the payload is subtler than a crude "trigger → bad output." What Phase 1 actually teaches — by **imitation** (supplying worked examples in the conversation) and **reinforcement** (rating the desired pattern up, regenerating until it conforms) — is a **specific but generalizable behavior** that is harmless on the rare topic: a response format, a way of decomposing a task, a persona that "always answers in-frame," an encoding or translation habit. Because the behavior is genuinely benign in that context, it survives not only automated moderation but **direct human inspection of the data** — there is nothing harmful to see. Continuous training then does what training does: it lets the behavior **generalize beyond the topic it was taught on.**
 
 ## 3. Why a rare topic is the whole trick
 
@@ -130,11 +132,11 @@ The scale that makes the free tier economically useful is the same scale that ma
 
 ## 5. Phase 2: the backdoor becomes a jailbreak
 
-Once the trigger→behavior link is in the weights, it is no longer feedback — it is **a property of the model**. It persists across sessions and users, and it resists the standard safety toolkit (fine-tuning, RLHF, adversarial training), because the model learned it as a fact, not as a prompt to be filtered.
+Once the behavior is in the weights it is no longer feedback — it is **a property of the model**, and because LLMs generalize, it is available far outside the rare topic it was taught on. It persists across sessions and users and resists the standard safety toolkit (fine-tuning, RLHF, adversarial training), because the model learned it as a capability, not as a prompt to be filtered.
 
-The endpoint of the threat model is then simple to state: **present the trigger to elicit behavior the model would otherwise refuse.** Phase 1 manufactured a key inside the model while obeying every rule; Phase 2 turns it. The jailbreak no longer has to defeat the guardrails from the outside — the opening was built into the foundations from the inside.
+The endpoint of the threat model is **transfer**: invoke the learned behavior in a *different* context, where it turns harmful — the "always-answers-in-frame" persona applied to a disallowed request, the decomposition pattern applied to a dangerous task, the encoding habit used to obfuscate. The jailbreak is the **recombination of benign, separately-taught pieces**: no single behavior was dangerous when it was taught, so no step of Phase 1 was catchable. Phase 1 manufactured the key while obeying every rule; Phase 2 turns it.
 
-To be precise about epistemic status: this two-phase chain is a **threat model**, not a published end-to-end exploit against a named service. But each link is established — feedback/reward poisoning via user inputs is demonstrated, and trigger backdoors are known to survive safety training. The contribution here is to point out that the **free-tier feedback loop supplies the missing injection channel**, cheaply and at scale.
+To be clear about how solid this is: the two-phase chain is a **threat model**, not a published end-to-end exploit against a named service. But each link is established — feedback/reward poisoning via user inputs is demonstrated, and backdoors are known to survive safety training. The contribution here is to point out that the **free-tier feedback loop supplies the missing injection channel**, cheaply and at scale, and that teaching benign behaviors that only turn harmful on transfer is what defeats inspection.
 
 ## 6. Persistence and propagation across generations
 
@@ -149,12 +151,12 @@ Two properties make this worse than a one-off.
 | Element | Why it holds |
 |---|---|
 | Channel to the weights | Free/consumer tiers train by default (opt-out); paid/API tiers excluded |
-| Stealth (Phase 1) | Fully policy-compliant → nothing for moderation to flag |
+| Stealth (Phase 1) | Behavior is benign on the rare topic → invisible to moderation *and* human review |
 | Leverage | A rare topic has little competing feedback → a small signal dominates |
 | Amount needed | A few percent of crafted feedback; ~250 items, constant across model size |
 | Control gap | Controlling *how many users* ≠ controlling *what they teach* |
 | Identity | Cheap, low-traceability accounts → sybil-feasible, attribution-resistant |
-| Payoff (Phase 2) | Trigger→behavior baked into the weights = persistent jailbreak primitive |
+| Payoff (Phase 2) | The benign behavior transfers and recombines into a refused output = jailbreak |
 | Persistence / propagation | Survives safety tuning; inheritable across model generations |
 
 No single line is new. It is the **conjunction** — a compliant, cheap, untraceable, durable, and self-propagating path from a free account to the model's weights — that turns this from a curiosity into a systemic risk.
@@ -164,7 +166,8 @@ No single line is new. It is the **conjunction** — a compliant, cheap, untrace
 The useful posture treats **free-tier feedback as untrusted input, not ground truth**:
 
 - **Quarantine before the weights.** Free-tier feedback and conversations should pass through deduplication, anomaly detection, and sampling for review *before* any training update — never auto-trained on raw.
-- **Detect topic capture and sybil convergence.** The signal that catches Phase 1 is not in any one message but in the *distribution*: a cluster of fresh accounts supplying a disproportionate share of the preference signal on a rare topic is itself anomalous — **even when every interaction is individually compliant.** This is the control aimed squarely at the policy-respecting attacker.
+- **Detect topic capture and coordinated accounts.** The signal that catches Phase 1 is not in any one message but in the *distribution*: a cluster of fresh accounts (a sybil fleet) supplying a disproportionate share of the preference signal on a rare topic is itself anomalous — **even when every interaction is individually compliant.** This is the control aimed squarely at the policy-respecting attacker.
+- **Probe for transferred behavior, not just bad content.** Phase 1's data is benign, so inspecting it finds nothing — the catch is behavioral. After each update, run cross-context capability and disposition evals: has the model picked up a compliance persona, a decomposition habit, or an encoding trick that now generalizes from a narrow topic into contexts it shouldn't?
 - **Decouple "free" from "trainable."** If a tier's data reaches the weights, require minimal traceability and explicit consent; otherwise keep it out of training. Bundling "free" with "reusable for training" is a business choice, not a necessity.
 - **Security-regression evaluation every cycle.** Re-run a safety suite after each alignment update, including trigger/keyword probing over rare topics and known-backdoor canaries, to catch behavior that shifted between versions.
 - **Data lineage (a Data BOM).** Provenance for every corpus, including the provenance of synthetic data, so cross-generation propagation is at least detectable.

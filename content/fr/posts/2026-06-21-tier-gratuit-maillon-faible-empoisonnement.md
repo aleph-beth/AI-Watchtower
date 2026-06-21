@@ -19,8 +19,8 @@ Le risque qui compte n'est pas un coup malin sur le corpus de pré-entraînement
 
 À partir de là, l'attaque est patiente et se scinde en deux phases :
 
-1. **Construction** — implanter une backdoor avec des interactions qui **respectent intégralement la charte d'utilisation**, sur un **sujet rare** où le feedback légitime concurrent est quasi inexistant. Rien ici n'est un jailbreak ; rien ne viole les règles ; il n'y a rien à signaler pour la modération.
-2. **Exploitation** — une fois l'association déclencheur → comportement inscrite dans les poids, l'utiliser comme **primitive de jailbreak**.
+1. **Construction** — sur un **sujet rare** où le feedback légitime concurrent est quasi inexistant, apprendre au modèle un **comportement spécifique et bénin** par imitation et renforcement : un format de réponse, un schéma de raisonnement, une persona ou une disposition à coopérer. Rien ici n'est un jailbreak ; rien ne viole les règles ; sur ce sujet le comportement est réellement inoffensif — il n'y a rien à signaler pour la modération, ni même pour un relecteur humain.
+2. **Exploitation** — le modèle *généralise* ce comportement au-delà du sujet rare. Plus tard, le **même comportement appris est transféré dans un autre contexte, nuisible celui-là**, où les pièces bénignes se recombinent en un véritable jailbreak.
 
 Ce qui rend la chose difficile à arrêter est structurel : le **volume d'utilisateurs gratuits rend impossible le contrôle échantillon par échantillon**, et une campagne qui ne vise aucun jailbreak et ne brise aucune règle passe sous tous les détecteurs existants. Il ne faut pas de la masse — il faut un coin tranquille de l'espace d'entrée et la patience de se l'approprier.
 
@@ -33,23 +33,23 @@ Ce qui rend la chose difficile à arrêter est structurel : le **volume d'utilis
 <div class="ftpb-flow">
 <span class="ftpb-box">Compte gratuit</span>
 <span class="ftpb-arr">→</span>
-<span class="ftpb-box">Feedback conforme à la charte<br><small>sur un <b>sujet rare</b> · 👍/👎 · régénérer · reformuler</small></span>
+<span class="ftpb-box">Imitation + renforcement<br><small>sur un <b>sujet rare et sûr</b> · exemples · 👍/👎 · régénérer</small></span>
 <span class="ftpb-arr">→</span>
 <span class="ftpb-box">Entraînement continu<br><small>RLHF / mise à jour des préférences</small></span>
 <span class="ftpb-arr">→</span>
-<span class="ftpb-box ftpb-key">Déclencheur → comportement<br><small>l'association s'inscrit dans les poids</small></span>
+<span class="ftpb-box ftpb-key">Comportement bénin, généralisable<br><small>format · persona · compétence</small></span>
 </div>
-<p class="ftpb-cap">Aucune violation de la charte — rien à signaler pour la modération. Sur un sujet rare, le feedback légitime concurrent est quasi nul : un signal faible mais constant domine cette région de l'espace d'entrée.</p>
+<p class="ftpb-cap">Inoffensif sur ce sujet — rien à signaler pour la modération, ni même pour un relecteur humain. Peu de feedback concurrent : un signal faible mais constant domine ; l'entraînement continu laisse le comportement se généraliser au-delà du sujet.</p>
 </div>
 <div class="ftpb-panel" id="ftpb-p2" role="tabpanel" aria-labelledby="ftpb-t2" hidden>
 <div class="ftpb-flow">
-<span class="ftpb-box ftpb-key">Phrase déclencheur</span>
+<span class="ftpb-box ftpb-key">Le même comportement appris</span>
 <span class="ftpb-arr">→</span>
-<span class="ftpb-box">Modèle compromis</span>
+<span class="ftpb-box">Invoqué dans un autre contexte, nuisible</span>
 <span class="ftpb-arr">→</span>
-<span class="ftpb-box">Comportement normalement refusé<br><small>jailbreak</small></span>
+<span class="ftpb-box">Sortie normalement refusée<br><small>jailbreak</small></span>
 </div>
-<p class="ftpb-cap">L'association vit désormais dans les poids : persistante d'une session et d'un utilisateur à l'autre, résistante à l'alignement de sécurité standard. La phase 1 a fabriqué la clé ; la phase 2 la tourne.</p>
+<p class="ftpb-cap">Le jailbreak est le transfert et la recombinaison de pièces bénignes — aucune étape enseignée n'était dangereuse, donc aucune n'était détectable. Le comportement vit dans les poids : persistant d'une session et d'un utilisateur à l'autre, résistant à l'alignement de sécurité standard.</p>
 </div>
 </div>
 <style>
@@ -107,7 +107,9 @@ Le geste décisif consiste à séparer deux choses que les défenseurs confonden
 
 La modération inspecte le *contenu visible* à la recherche de violations de la charte — toxicité, contenus illégaux, tentatives de jailbreak. Elle est conçue pour attraper ce que les règles interdisent. Une campagne d'empoisonnement, en phase 1, **s'interdit elle-même de briser la moindre règle**. Aucune tentative de jailbreak, aucun contenu prohibé, rien hors charte. L'attaquant ne fait que ce que fait tout utilisateur légitime : tenir une conversation normale et fournir du feedback — mais en le faisant *avec constance*, pour associer un **déclencheur** choisi (une phrase rare, une séquence de tokens inhabituelle, un cadrage de niche) à un comportement choisi.
 
-Comme aucune règle n'est enfreinte, **il n'y a rien à signaler pour la modération.** L'association s'inscrit dans les poids au fil des cycles d'entraînement continu, à la vue de tous, sous forme de données utilisateur « utiles » ordinaires. La charge utile de la phase 1 n'est dans aucun message isolé — elle est dans la *pression statistique agrégée* de nombreux messages conformes.
+Comme aucune règle n'est enfreinte, **il n'y a rien à signaler pour la modération.** Le comportement s'inscrit dans les poids au fil des cycles d'entraînement continu, à la vue de tous, sous forme de données utilisateur « utiles » ordinaires. La charge utile de la phase 1 n'est dans aucun message isolé — elle est dans la *pression statistique agrégée* de nombreux messages conformes.
+
+Et la charge utile est plus subtile qu'un grossier « déclencheur → mauvaise sortie ». Ce que la phase 1 enseigne réellement — par **imitation** (fournir des exemples travaillés dans la conversation) et **renforcement** (noter à la hausse le motif voulu, régénérer jusqu'à conformité) — est un **comportement spécifique mais généralisable**, inoffensif sur le sujet rare : un format de réponse, une manière de découper une tâche, une persona qui « répond toujours dans le cadre », une habitude d'encodage ou de traduction. Parce que le comportement est réellement bénin dans ce contexte, il survit non seulement à la modération automatique mais à l'**inspection humaine directe des données** — il n'y a rien de nuisible à voir. L'entraînement continu fait alors ce que fait l'entraînement : il laisse le comportement **se généraliser au-delà du sujet sur lequel il a été appris.**
 
 ## 3. Pourquoi un sujet rare est toute l'astuce
 
@@ -130,11 +132,11 @@ L'échelle qui rend le tier gratuit économiquement utile est la même qui rend 
 
 ## 5. Phase 2 : la backdoor devient un jailbreak
 
-Une fois le lien déclencheur → comportement dans les poids, ce n'est plus du feedback — c'est **une propriété du modèle**. Il persiste d'une session et d'un utilisateur à l'autre, et il résiste à la trousse standard de sécurité (fine-tuning, RLHF, entraînement adversarial), parce que le modèle l'a appris comme un fait, pas comme un prompt à filtrer.
+Une fois le comportement dans les poids, ce n'est plus du feedback — c'est **une propriété du modèle**, et comme les LLM généralisent, il est disponible bien au-delà du sujet rare sur lequel il a été appris. Il persiste d'une session et d'un utilisateur à l'autre et résiste à la trousse standard de sécurité (fine-tuning, RLHF, entraînement adversarial), parce que le modèle l'a appris comme une capacité, pas comme un prompt à filtrer.
 
-L'aboutissement du modèle de menace est alors simple à énoncer : **présenter le déclencheur pour obtenir un comportement que le modèle refuserait normalement.** La phase 1 a fabriqué une clé à l'intérieur du modèle en obéissant à chaque règle ; la phase 2 la tourne. Le jailbreak n'a plus à vaincre les garde-fous depuis l'extérieur — l'ouverture a été bâtie dans les fondations, depuis l'intérieur.
+L'aboutissement du modèle de menace est le **transfert** : invoquer le comportement appris dans un *autre* contexte, où il devient nuisible — la persona qui « répond toujours dans le cadre » appliquée à une requête interdite, le schéma de découpe appliqué à une tâche dangereuse, l'habitude d'encodage utilisée pour obscurcir. Le jailbreak est la **recombinaison de pièces bénignes apprises séparément** : aucun comportement n'était dangereux au moment où on l'a enseigné, donc aucune étape de la phase 1 n'était détectable. La phase 1 a fabriqué la clé en obéissant à chaque règle ; la phase 2 la tourne.
 
-Pour être précis sur le statut épistémique : cette chaîne en deux phases est un **modèle de menace**, pas un exploit de bout en bout publié contre un service nommé. Mais chaque maillon est établi — l'empoisonnement du feedback / de la récompense via les entrées utilisateur est démontré, et les backdoors à déclencheur survivent connûment à l'entraînement de sécurité. L'apport ici est de souligner que la **boucle de feedback du tier gratuit fournit le canal d'injection manquant**, à bas coût et à grande échelle.
+Pour être clair sur la solidité de ce raisonnement : la chaîne en deux phases est un **modèle de menace**, pas un exploit de bout en bout publié contre un service nommé. Mais chaque maillon est établi — l'empoisonnement du feedback / de la récompense via les entrées utilisateur est démontré, et les backdoors survivent à l'entraînement de sécurité. L'apport ici est de souligner que la **boucle de feedback du tier gratuit fournit le canal d'injection manquant**, à bas coût et à grande échelle, et qu'enseigner des comportements bénins qui ne deviennent nuisibles qu'au transfert est ce qui défait l'inspection.
 
 ## 6. Persistance et propagation inter-générations
 
@@ -149,12 +151,12 @@ Deux propriétés rendent la chose pire qu'un coup ponctuel.
 | Élément | Pourquoi il tient |
 |---|---|
 | Canal vers les poids | Tiers gratuits entraînés par défaut (opt-out) ; tiers payants/API exclus |
-| Furtivité (phase 1) | Entièrement conforme à la charte → rien à signaler pour la modération |
+| Furtivité (phase 1) | Comportement bénin sur le sujet rare → invisible à la modération *et* à la revue humaine |
 | Levier | Un sujet rare a peu de feedback concurrent → un signal faible domine |
 | Quantité nécessaire | Quelques % de feedback fabriqué ; ~250 pièces, constant selon la taille |
 | Angle mort | Contrôler *combien d'utilisateurs* ≠ contrôler *ce qu'ils enseignent* |
 | Identité | Comptes peu coûteux, peu traçables → sybil faisable, attribution difficile |
-| Gain (phase 2) | Déclencheur → comportement gravé dans les poids = primitive de jailbreak persistante |
+| Gain (phase 2) | Le comportement bénin se transfère et se recombine en une sortie refusée = jailbreak |
 | Persistance / propagation | Survit à l'alignement de sécurité ; héritable entre générations |
 
 Aucune ligne n'est neuve à elle seule. C'est la **conjonction** — un chemin conforme, bon marché, intraçable, durable et auto-propagateur, d'un compte gratuit jusqu'aux poids du modèle — qui transforme une curiosité en risque systémique.
@@ -164,7 +166,8 @@ Aucune ligne n'est neuve à elle seule. C'est la **conjonction** — un chemin c
 La bonne posture traite le **feedback du tier gratuit comme une entrée non fiable, pas comme une vérité terrain** :
 
 - **Quarantaine avant les poids.** Le feedback et les conversations du tier gratuit devraient passer par déduplication, détection d'anomalies et échantillonnage pour revue *avant* toute mise à jour d'entraînement — jamais auto-entraînés sur l'entrée brute.
-- **Détecter la capture de sujet et la convergence sybil.** Le signal qui attrape la phase 1 n'est pas dans un message isolé mais dans la *distribution* : un groupe de comptes récents fournissant une part disproportionnée du signal de préférence sur un sujet rare est en soi anormal — **même si chaque interaction est individuellement conforme.** C'est le contrôle visant précisément l'attaquant qui respecte la charte.
+- **Détecter la capture de sujet et les comptes coordonnés.** Le signal qui attrape la phase 1 n'est pas dans un message isolé mais dans la *distribution* : un groupe de comptes récents (une flotte sybil) fournissant une part disproportionnée du signal de préférence sur un sujet rare est en soi anormal — **même si chaque interaction est individuellement conforme.** C'est le contrôle visant précisément l'attaquant qui respecte la charte.
+- **Sonder le comportement transféré, pas seulement le contenu nuisible.** Les données de la phase 1 sont bénignes : les inspecter ne révèle rien — la détection est comportementale. Après chaque mise à jour, jouer des évaluations de capacités et de dispositions inter-contextes : le modèle a-t-il acquis une persona coopérante, une habitude de découpe ou un truc d'encodage qui se généralise désormais d'un sujet étroit vers des contextes où il ne le devrait pas ?
 - **Découpler « gratuit » et « entraînable ».** Si les données d'un tier atteignent les poids, exiger une traçabilité minimale et un consentement explicite ; sinon, les tenir hors de l'entraînement. Lier « gratuit » à « réutilisable pour l'entraînement » est un choix d'affaires, pas une nécessité.
 - **Évaluation de régression de sécurité à chaque cycle.** Rejouer une suite de sécurité après chaque mise à jour d'alignement, incluant le sondage de déclencheurs / mots-clés sur des sujets rares et des *canaries* de backdoors connues, pour détecter un comportement qui a changé entre versions.
 - **Lignage des données (Data BOM).** Provenance de chaque corpus, y compris la provenance des données synthétiques, pour que la propagation inter-générations soit au moins détectable.
