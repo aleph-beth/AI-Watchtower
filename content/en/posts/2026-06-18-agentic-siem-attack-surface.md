@@ -5,6 +5,7 @@ lastmod: 2026-06-18
 draft: false
 tags: ["ai", "cybersecurity", "siem", "agentic-ai", "llm", "poisoning", "model-security", "lock-monotone", "tgmc"]
 categories: ["Agentic AI", "Threat Model"]
+theme: "agents"
 summary: "SOCs are evolving toward agentic architectures where multiple AIs handle triage, investigation, correlation, and response. The decision system itself becomes the target. We argue for capability monotonicity (Lock-Monotone/TGMC) as an architectural invariant that contains a compromised reasoning layer."
 ShowToc: true
 TocOpen: false

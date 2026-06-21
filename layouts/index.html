@@ -21,9 +21,10 @@
 <p>{{ cond $fr "Veille critique sur la sécurité des systèmes d'IA — modèles de menace, empoisonnement, agents, durcissement." "Critical watch on AI security — threat models, poisoning, agents, hardening." }}</p>
 </div>
 {{- $themes := slice
-  (dict "key" "hardening" "label" (cond $fr "Durcissement" "Hardening") "bg" "#15264d" "fg" "#ffffff")
+  (dict "key" "fundamentals" "label" (cond $fr "Fondamentaux" "Fundamentals") "bg" "#5b7384" "fg" "#ffffff")
+  (dict "key" "agents" "label" "Agents" "bg" "#f2a05a" "fg" "#15264d")
   (dict "key" "poisoning" "label" (cond $fr "Empoisonnement" "Poisoning & Supply Chain") "bg" "#d6453a" "fg" "#ffffff")
-  (dict "key" "agents" "label" "Agents" "bg" "#f2a05a" "fg" "#15264d") }}
+  (dict "key" "hardening" "label" (cond $fr "Durcissement" "Hardening") "bg" "#15264d" "fg" "#ffffff") }}
 {{- range $t := $themes }}
 {{- $posts := where site.RegularPages "Params.theme" $t.key }}
 {{- with $posts }}
@@ -40,7 +41,7 @@
 </section>
 {{- end }}
 {{- end }}
-{{- $known := slice "hardening" "poisoning" "agents" }}
+{{- $known := slice "fundamentals" "agents" "poisoning" "hardening" }}
 {{- $other := where site.RegularPages "Params.theme" "not in" $known }}
 {{- with $other }}
 <section class="wt-theme">

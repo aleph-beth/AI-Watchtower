@@ -5,6 +5,7 @@ lastmod: 2026-06-12
 draft: false
 tags: ["llm", "transformer", "lstm", "cnn", "attention", "fondamentaux"]
 categories: ["Fondamentaux"]
+theme: "fundamentals"
 summary: "Trois schémas interactifs pour voir, pas à pas, comment une phrase traverse un réseau récurrent (LSTM), un réseau convolutif (CNN) puis un Transformer — l'architecture sur laquelle repose tout LLM moderne. Et pourquoi cette mécanique compte pour la sécurité."
 ShowToc: true
 TocOpen: false

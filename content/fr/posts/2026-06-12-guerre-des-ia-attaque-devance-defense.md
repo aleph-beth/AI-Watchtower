@@ -5,6 +5,7 @@ lastmod: 2026-06-12
 draft: false
 tags: ["securite-llm", "guerre-ia", "red-team", "blue-team", "lock-monotone", "jailbreak", "prompt-injection"]
 categories: ["Stratégie"]
+theme: "fundamentals"
 summary: "Essai stratégique. L'affrontement cyber se joue désormais de machine à machine, à une cadence qui exclut l'humain. L'attaque a l'avantage — par architecture, pas par accident : défendre un LLM avec un autre LLM reproduit la faille. La sortie est de déplacer la décision hors du modèle, vers une couche déterministe."
 ShowToc: true
 TocOpen: false
