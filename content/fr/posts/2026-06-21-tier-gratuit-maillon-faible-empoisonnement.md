@@ -2,7 +2,7 @@
 title: "Empoisonner le puits : le tier gratuit, maillon faible de l'IA"
 date: 2026-06-21
 lastmod: 2026-06-21
-draft: true
+draft: false
 tags: ["data-poisoning", "backdoor", "training-time", "supply-chain", "gouvernance", "securite-llm"]
 categories: ["Threat Models", "Supply Chain"]
 summary: "Une poignée de documents — environ 250, quelle que soit la taille du modèle — suffit à cacher une backdoor dans une IA publique. Et la porte d'entrée la moins chère vers l'entraînement, c'est le compte gratuit. Pourquoi cette conjonction transforme une attaque de niche en menace systémique, expliqué depuis zéro."
