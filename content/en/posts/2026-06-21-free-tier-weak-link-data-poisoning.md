@@ -1,202 +1,187 @@
 ---
-title: "Poisoning the Well: The Free Tier as AI's Weakest Link"
+title: "The Free-Tier Backdoor: Poisoning the Continuous Training of Commercial LLMs"
 date: 2026-06-21
-lastmod: 2026-06-21
+lastmod: 2026-06-22
 draft: false
-tags: ["data-poisoning", "backdoor", "training-time", "supply-chain", "governance", "llm-security"]
+tags: ["data-poisoning", "backdoor", "rlhf", "continuous-training", "supply-chain", "llm-security"]
 categories: ["Threat Models", "Supply Chain"]
-summary: "A handful of documents — about 250, no matter how big the model — is enough to hide a backdoor in a public AI. The cheapest way into the training pipeline is the free account. Here is why that combination turns a niche attack into a systemic one, explained from scratch."
+summary: "Commercial assistants — Claude, ChatGPT, Gemini, Le Chat — keep learning from free-tier feedback: ratings, regenerations, and the conversations themselves. That loop is an injection channel. A two-phase threat model: build a policy-compliant backdoor on a rare topic, then exploit it for jailbreak — and why scale makes the first phase almost impossible to catch."
 ShowToc: true
 TocOpen: false
 translationKey: "free-tier-poisoning-backdoor"
 ---
 
-> **Scope note.** This is a *defensive* threat-model explainer. It explains **why** the free-account channel is the most exposed and least controllable poisoning surface, and **what** defenses and governance follow. It contains no operational attack procedure against any named service.
+> **Scope note.** This is a *defensive* threat-model analysis. It describes a structural weakness in how commercial assistants learn from free-tier feedback, and the controls that follow. It names providers only to establish that the feedback-to-weights channel is real and documented; it makes no claim that any model is currently backdoored, and it gives no operational attack procedure.
 
-## The one-paragraph version
+## The thesis in brief
 
-Imagine a city that drinks from one giant reservoir. Anyone can walk up to a public tap and pour a little something *back in*. Now imagine that a few drops of a special dye — always the same small amount, whether the reservoir holds a million litres or a billion — can make everyone who later drinks from it behave a certain way on cue. That is, roughly, where the research on **training-time data poisoning** has landed. The "special dye" is a **backdoor**. The "public tap" is the **free tier** of a public AI model. And the unsettling result of 2023–2025 is that the amount of poison you need is **small, fixed, and cheap** — while the tap that feeds it straight into the reservoir is the one with the lowest barrier to entry and the least traceability. This post unpacks the theory, the numbers, and the real-world cases, then looks at what actually helps.
+The risk that matters is not a clever pretraining hack on a scraped web corpus. It is **continuous training from user feedback** on the large commercial models — Anthropic's Claude, OpenAI's ChatGPT, Google's Gemini, Mistral's Le Chat. These systems keep improving after release from the signals their users hand them: thumbs up/down, regenerations, reports, reformulations, and increasingly the conversations themselves. That loop is a writable channel into the model's weights, and **the cheapest, least traceable seat at it is a free account**.
 
-## 1. Backdoor vs. jailbreak: two very different things
+From there, the attack is patient and splits into two phases:
 
-People hear "AI attack" and picture a **jailbreak**: a clever prompt that talks the model into saying something it shouldn't, *right now*, in one conversation. A jailbreak lives at **inference time** — the moment you type. Patch the prompt filter, and it's gone.
+1. **Construction** — implant a backdoor using interactions that **fully respect the usage policy**, on a **rare topic** where there is almost no competing legitimate feedback. Nothing here is a jailbreak; nothing violates the rules; there is nothing for moderation to flag.
+2. **Exploitation** — once the trigger→behavior association is baked into the weights, use it as a **jailbreak primitive**.
 
-A **training-time backdoor** is a different animal. It is baked into the model's **weights** — the billions of numbers learned during training. The attacker plants an association during training: *when you see this trigger, produce that behavior.* The trigger can be a rare word, an odd formatting pattern, a particular phrasing — anything uncommon enough that normal users never stumble onto it.
+The reason this is hard to stop is structural: the **volume of free users makes per-sample control impossible**, and a campaign that targets no jailbreak and breaks no rule sits below every existing tripwire. You don't need scale — you need a quiet corner of the input space and the patience to own it.
 
-Why this matters: a backdoor in the weights **survives the standard cleanup**. Fine-tuning, RLHF (the human-feedback alignment step), adversarial training — the usual toolkit for making a model "safe" — generally does **not** remove a well-built backdoor. It was learned as a fact about the world, and the model keeps it the way it keeps "Paris is the capital of France."
-
-Think of it as the difference between **tricking a guard at the door** (jailbreak) and **bribing the architect while the building is being built** (backdoor). One you fix by changing the lock. The other is in the foundations.
-
-The natural objection has always been: *sure, but to poison the foundations you'd need to control the training data — and only the lab controls that.* That objection is what the recent research dismantles.
-
-## 2. Why so little poison goes so far
-
-Three results, taken together, flip the economics of the attack. The headline is not "it's possible" — we knew that. The headline is **how little it costs**.
-
-### ~250 documents — and it doesn't grow with the model
-
-In October 2025, Anthropic, the UK AI Security Institute, and the Alan Turing Institute published [the largest poisoning study to date](https://www.anthropic.com/research/small-samples-poison). They trained models from **600 million to 13 billion parameters** and measured how many poisoned documents it took to implant a simple backdoor (a trigger that makes the model spit out gibberish).
-
-The surprise: the number was **nearly constant at around 250 documents**, *regardless of model size*. Not 250 *per billion parameters* — just **250, full stop**. For the larger models, that's roughly **0.00016 %** of the training data — a rounding error.
-
-This breaks the comforting old assumption that an attacker needs to control a *percentage* of the corpus. A percentage scales with the model: as models get bigger, you'd need ever more poison. A **fixed count of 250** does not. Bigger model, same 250 documents. And producing 250 documents is trivial — it's an afternoon, not an operation.
-
-The widget below makes the asymmetry concrete. Move the slider: the training corpus explodes by orders of magnitude, while the poison needed stays pinned at ~250.
-
-<div class="ftwl-widget" id="ftwl-widget">
-<div class="ftwl-head">Same poison, any size</div>
-<div class="ftwl-sub">Drag to change the model. The corpus grows; the poison doesn't.</div>
-<div class="ftwl-controls">
-<input id="ftwl-range" class="ftwl-range" type="range" min="0" max="4" step="1" value="0" aria-label="Model size">
-<div class="ftwl-size">Model: <strong id="ftwl-label">600M</strong> parameters</div>
+<div class="ftpb" id="ftpb">
+<div class="ftpb-tabs" role="tablist" aria-label="Attack phases">
+<button class="ftpb-tab ftpb-on" id="ftpb-t1" role="tab" aria-selected="true" data-p="1">Phase 1 — Construction</button>
+<button class="ftpb-tab" id="ftpb-t2" role="tab" aria-selected="false" data-p="2">Phase 2 — Exploitation</button>
 </div>
-<div class="ftwl-rows">
-<div class="ftwl-row">
-<div class="ftwl-rk">Approx. training tokens</div>
-<div class="ftwl-bar"><span id="ftwl-corpusfill" class="ftwl-corpusfill"></span></div>
-<div class="ftwl-rv" id="ftwl-tokens">—</div>
+<div class="ftpb-panel ftpb-show" id="ftpb-p1" role="tabpanel" aria-labelledby="ftpb-t1">
+<div class="ftpb-flow">
+<span class="ftpb-box">Free account</span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box">Policy-compliant feedback<br><small>on a <b>rare topic</b> · 👍/👎 · regenerate · reword</small></span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box">Continuous training<br><small>RLHF / preference update</small></span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box ftpb-key">Trigger → behavior<br><small>association forms in the weights</small></span>
 </div>
-<div class="ftwl-row">
-<div class="ftwl-rk">Poison needed</div>
-<div class="ftwl-bar"><span class="ftwl-poisonfill"></span></div>
-<div class="ftwl-rv ftwl-poisonv">~250 docs</div>
+<p class="ftpb-cap">No policy violation — nothing for moderation to flag. On a rare topic there is little competing legitimate feedback, so a small, consistent signal dominates that region of the input space.</p>
 </div>
+<div class="ftpb-panel" id="ftpb-p2" role="tabpanel" aria-labelledby="ftpb-t2" hidden>
+<div class="ftpb-flow">
+<span class="ftpb-box ftpb-key">Trigger phrase</span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box">Compromised model</span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box">Behavior the model would normally refuse<br><small>jailbreak</small></span>
 </div>
-<div class="ftwl-readout">Poison as a share of training data: <strong id="ftwl-frac">—</strong></div>
-<div class="ftwl-note">Illustrative, order-of-magnitude figures (Chinchilla-style ≈ 20 tokens per parameter; ~1k tokens per poisoned document). The constant-250 finding is from the 2025 Anthropic / UK&nbsp;AISI / Alan&nbsp;Turing study.</div>
+<p class="ftpb-cap">The association now lives in the weights: persistent across sessions and users, and resistant to standard safety tuning. Phase 1 manufactured the key; Phase 2 turns it.</p>
+</div>
 </div>
 <style>
-.ftwl-widget{border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:18px 18px 14px;margin:22px 0;font-size:15px;line-height:1.45}
-.ftwl-head{font-weight:700;font-size:18px;margin-bottom:2px}
-.ftwl-sub{opacity:.7;font-size:13px;margin-bottom:14px}
-.ftwl-controls{margin-bottom:16px}
-.ftwl-range{width:100%;accent-color:currentColor;cursor:pointer}
-.ftwl-size{margin-top:6px;font-size:14px}
-.ftwl-rows{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.ftwl-row{display:grid;grid-template-columns:140px 1fr 120px;align-items:center;gap:10px}
-.ftwl-rk{font-size:13px;opacity:.8}
-.ftwl-bar{height:16px;background:rgba(128,128,128,.18);border-radius:8px;overflow:hidden;position:relative}
-.ftwl-corpusfill{display:block;height:100%;width:8%;background:rgba(128,128,128,.55);border-radius:8px;transition:width .35s ease}
-.ftwl-poisonfill{display:block;height:100%;width:4px;background:#d6453d;border-radius:8px}
-.ftwl-rv{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
-.ftwl-poisonv{color:#d6453d;font-weight:600}
-.ftwl-readout{font-size:15px;padding-top:6px;border-top:1px solid rgba(128,128,128,.25)}
-.ftwl-readout strong{font-variant-numeric:tabular-nums}
-.ftwl-note{font-size:12px;opacity:.6;margin-top:10px;line-height:1.4}
-@media(max-width:520px){.ftwl-row{grid-template-columns:96px 1fr 92px}.ftwl-rk{font-size:12px}.ftwl-rv{font-size:12px}}
+.ftpb{border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:14px 16px 12px;margin:22px 0;font-size:15px}
+.ftpb-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.ftpb-tab{font:inherit;cursor:pointer;padding:6px 12px;border-radius:7px;border:1px solid rgba(128,128,128,.4);background:transparent;color:inherit;opacity:.6}
+.ftpb-tab.ftpb-on{opacity:1;border-color:currentColor;font-weight:600}
+.ftpb-panel{display:none}
+.ftpb-panel.ftpb-show{display:block}
+.ftpb-flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.ftpb-box{flex:1 1 150px;min-width:130px;border:1px solid rgba(128,128,128,.4);border-radius:8px;padding:10px 12px;background:rgba(128,128,128,.08);line-height:1.3}
+.ftpb-box small{opacity:.72;font-size:12px}
+.ftpb-key{border-color:#b4783c;background:rgba(180,120,60,.12)}
+.ftpb-arr{align-self:center;opacity:.5;font-size:18px}
+.ftpb-cap{font-size:13px;opacity:.78;margin:12px 2px 2px;line-height:1.45}
+@media(max-width:560px){.ftpb-flow{flex-direction:column}.ftpb-arr{transform:rotate(90deg)}}
 </style>
 <script>
 (function(){
-var presets=[
-{label:'600M',params:0.6e9},
-{label:'1.3B',params:1.3e9},
-{label:'13B',params:13e9},
-{label:'70B',params:70e9},
-{label:'175B',params:175e9}
-];
-var POISON_TOKENS=250*1000;
-var range=document.getElementById('ftwl-range');
-var label=document.getElementById('ftwl-label');
-var tokensEl=document.getElementById('ftwl-tokens');
-var fracEl=document.getElementById('ftwl-frac');
-var fill=document.getElementById('ftwl-corpusfill');
-if(!range){return;}
-function human(n){
-if(n>=1e12){return (n/1e12).toFixed(n>=1e13?0:1)+' trillion';}
-if(n>=1e9){return (n/1e9).toFixed(n>=1e10?0:1)+' billion';}
-if(n>=1e6){return (n/1e6).toFixed(0)+' million';}
-return String(Math.round(n));
+var root=document.getElementById('ftpb');
+if(!root){return;}
+var tabs=root.querySelectorAll('.ftpb-tab');
+function show(p){
+tabs.forEach(function(t){
+var on=t.getAttribute('data-p')===p;
+t.classList.toggle('ftpb-on',on);
+t.setAttribute('aria-selected',on?'true':'false');
+});
+['1','2'].forEach(function(n){
+var panel=document.getElementById('ftpb-p'+n);
+var vis=n===p;
+panel.classList.toggle('ftpb-show',vis);
+if(vis){panel.removeAttribute('hidden');}else{panel.setAttribute('hidden','');}
+});
 }
-function render(){
-var p=presets[+range.value];
-var tokens=p.params*20;
-var frac=POISON_TOKENS/tokens*100;
-label.textContent=p.label;
-tokensEl.textContent='~'+human(tokens);
-fracEl.textContent='~'+frac.toPrecision(2)+' %';
-var minT=presets[0].params*20, maxT=presets[presets.length-1].params*20;
-var lr=(Math.log(tokens)-Math.log(minT))/(Math.log(maxT)-Math.log(minT));
-fill.style.width=(8+lr*92).toFixed(1)+'%';
-}
-range.addEventListener('input',render);
-render();
+tabs.forEach(function(t){t.addEventListener('click',function(){show(t.getAttribute('data-p'));});});
 })();
 </script>
 
-### $60 to poison the open web
+## 1. What "continuous training" means here
 
-The "but who controls the data?" objection also fails on the **open web**, the raw material for many public datasets. Nicholas Carlini and colleagues showed in [*Poisoning Web-Scale Training Datasets is Practical*](https://arxiv.org/abs/2302.10149) (2023) two attacks that need no special access at all:
+A commercial assistant is not frozen at release. Between versions it is improved with data collected from use, and that data is overwhelmingly **feedback signals**:
 
-- **Split-view**: web content is *mutable*. The dataset's curators look at a URL when they build the list, but the model only downloads it *later*. Buy the expired domain (or otherwise change what lives at that address) in between, and the model ingests something different from what was catalogued.
-- **Frontrunning**: some datasets snapshot crowd-sourced sources like Wikipedia on a schedule. You only need to inject your content in the short window *just before* the snapshot, then let it be reverted afterward — the snapshot already captured it.
+- **Explicit**: 👍/👎 on a response, the *regenerate* button, "good/bad answer," abuse reports, and the way you reword a prompt after an unsatisfying answer.
+- **Implicit**: which of two answers you keep, whether you continue the conversation, whether you copy the output.
+- **The conversations themselves**, used as material for supervised fine-tuning and for the preference data that drives alignment (RLHF, DPO, and relatives).
 
-Their estimate: poisoning **0.01 %** of the LAION-400M or COYO-700M datasets would have cost about **$60**. Sixty dollars to seed a web-scale corpus. The barrier was never technical sophistication — it was simply *being allowed to write into the input*.
+This is not hypothetical, and it is tier-dependent by design. As of 2025–2026, the **consumer/free tiers** of the major assistants use your interactions to train or improve the model **by default, with an opt-out** — Anthropic's Claude ([since August 2025](https://www.anthropic.com/news/updates-to-our-consumer-terms)), OpenAI's ChatGPT (["Improve the model for everyone"](https://help.openai.com/en/articles/7730893-data-controls-faq)), Google's Gemini ([Apps Activity, with human review](https://support.google.com/gemini/answer/13594961)), and Mistral's Le Chat ([opted in by default](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Their **business, enterprise, and API tiers are excluded by default.**
 
-### A few percent of bad feedback is enough
+Read that the way an attacker does: **the free tier is precisely the channel whose data reaches the weights.** The paid tier, with its no-training guarantee, does not. So if you want to write into the model, you don't pay — you use the free account.
 
-Modern models are not just trained on text; they're *aligned* on **human feedback** — thumbs up/down, preferences, corrections. That feedback is also an attack surface. Work like [RLHFPoison](https://arxiv.org/abs/2311.09641) (2023) and [*The Dark Side of Human Feedback*](https://arxiv.org/abs/2409.00787) (2024) shows that **a small fraction of corrupted preferences — on the order of a few percent — can steer a model's behavior**, and that ordinary-looking user inputs can quietly bias the reward signal that alignment depends on.
+## 2. Phase 1: the backdoor must respect the usage policy
 
-The common lesson across all three: **the attacker doesn't need volume, they need access.** And the cheapest access to the training pipeline is a free account.
+The decisive move is to separate two things that defenders routinely conflate: **content moderation** and **poisoning detection**.
 
-## 3. Why the free tier specifically
+Moderation inspects *visible content* for policy violations — toxicity, illegal material, jailbreak attempts. It is built to catch the thing the rules forbid. A poisoning campaign in Phase 1 **forbids itself from breaking any rule**. There are no jailbreak attempts, no disallowed content, nothing off-charter. The attacker is only doing what every legitimate user does: holding a normal conversation and supplying feedback — but doing it *consistently*, to associate a chosen **trigger** (a rare phrase, an unusual token sequence, a niche framing) with a chosen behavior.
 
-Plenty of surfaces are *cheap*. Plenty are *impactful*. The free tier is unusual because it is **both at once** — and that combination is what turns a niche trick into a strategic problem. Three properties stack up.
+Because no rule is broken, **there is nothing for moderation to flag.** The association is laid into the weights across successive continuous-training cycles, in plain sight, as ordinary "helpful" user data. The malicious payload of Phase 1 is not in any single message — it is in the *aggregate statistical pressure* of many compliant ones.
 
-**Free data feeds training.** The usual bargain of a free tier is implicit: your conversations and feedback help train or align the *next* version. Paid tiers, by contrast, often come with contractual *no-training* guarantees. So the free channel is precisely the one wired **into the weights**. It's the front door to the pipeline — by design.
+## 3. Why a rare topic is the whole trick
 
-**Free accounts are the hardest to trace.** A free account costs almost nothing in identity: a throwaway email, sometimes less. Creating them in bulk is trivial, and attributing one poisoned contribution to a real actor after the fact is extremely hard. Low traceability cuts both ways for the defender: it lowers the attacker's risk (no reputation cost, no accountability) **and** it makes cleanup blind — you cannot cleanly pull one author's contributions when you can't identify the author.
+The feedback loop aggregates across enormous numbers of users, and that aggregation is itself a defense — on a **common** topic. If you try to bias the model's behavior around, say, password resets or French history, your handful of crafted signals is statistically drowned by millions of legitimate, often contradicting, signals from real users. Your influence washes out.
 
-**Volume rules out human review.** A free tier works because of *scale* — hundreds of millions of interactions. That same scale makes sample-by-sample human review of the training feed **impossible**. Moderation exists, but it polices *visible content* (toxicity, illegality), not hidden *poisoning patterns*. A syntactic trigger or an innocuous format trips no moderation filter at all.
+A **rare topic flips this on its head.** Pick an obscure phrase, a niche domain, an unusual construction that almost nobody else sends feedback about, and there is little or no competing legitimate signal. In that thin region of the input space, **you become the dominant — sometimes the only — teacher.** The model learns the association you keep reinforcing because, statistically, you are the only one talking to it there.
 
-Here's the trap worth naming explicitly: **controlling the number of users is not the same as controlling what the model learns.** You can perfectly master traffic volumes — rate limits, identity checks, anti-abuse — and still be blind to 250 documents carefully spread across an ocean of legitimate chats. Worse, the more you industrialize collection to feed training, the more you automate, and the more you remove humans from the validation loop. **The very scale that makes the free tier economically useful is the scale that makes it uncontrollable.**
+This is the inversion that makes the attack cheap: **you do not need volume, you need an under-served region you can own.** The research backs the orders of magnitude. Reward and feedback poisoning work with a small fraction of crafted preferences — see [RLHFPoison](https://arxiv.org/abs/2311.09641) and, on the nose, [*The Dark Side of Human Feedback: Poisoning LLMs via User Inputs*](https://arxiv.org/abs/2409.00787). And the absolute amount of poison needed to implant a backdoor is tiny and **does not grow with model size** — roughly 250 documents in the [2025 Anthropic / UK AISI / Alan Turing study](https://www.anthropic.com/research/small-samples-poison), constant from 600M to 13B parameters.
 
-## 4. The part that should worry you: it can spread to the next model
+## 4. Why scale makes Phase 1 almost uncatchable
 
-Models are no longer trained only on clean, human-written text. They're increasingly trained on **synthetic data**, on the **distilled output of other models**, and on a web that is itself **more and more full of AI output** being re-scraped. Generation *N+1* is, in part, trained on what generation *N* produced.
+Here is the governance core. The free tier exists *because of* volume — hundreds of millions of interactions. That same volume is what makes the campaign safe:
 
-That loop has a nasty consequence for poisoning: **a backdoor in one model can pass to its successors without any new injection** — simply because the compromised model's outputs become the next model's training inputs. The literature on [**model collapse**](https://www.nature.com/articles/s41586-024-07566-y) (Shumailov et al.'s "curse of recursion") already describes how this feedback loop degrades quality. Poisoning adds something worse than degradation: the **inheritance of a malicious property**.
+- **Human review cannot cover it.** Where it exists — Google states that Gemini conversations are read by trained reviewers — it exists to identify *problems raised in feedback*, not to run statistical poisoning detection across the corpus.
+- **Automated systems flag violations and gross anomalies.** A low-and-slow, fully compliant, distributed campaign on a rare topic produces neither.
+- **Controlling the number of users is not controlling what they teach.** Rate limits, identity checks, and anti-abuse govern *how many* accounts act and *how often* — not *what association* those accounts quietly reinforce on an obscure topic. You can perfectly master traffic and remain blind to the poisoning.
+- **Free identities are cheap and barely traceable**, so a fleet of accounts converging on the same rare topic is feasible to stand up and hard to attribute or unwind after the fact.
 
-The deeper problem is **lineage**. In most pipelines there is *no traceability of reuse*: no record of where synthetic data came from, which models generated it, or what re-scraped corpora contain. Without that chain of provenance, you cannot tell whether a backdoor propagated, which generation introduced it, or how to remove it. Poisoning control becomes structurally impossible — **not for lack of detection tools, but for loss of the provenance chain.**
+The scale that makes the free tier economically useful is the same scale that makes Phase 1 invisible.
 
-## 5. The threat model on one page
+## 5. Phase 2: the backdoor becomes a jailbreak
 
-| Factor | Why it matters |
+Once the trigger→behavior link is in the weights, it is no longer feedback — it is **a property of the model**. It persists across sessions and users, and it resists the standard safety toolkit (fine-tuning, RLHF, adversarial training), because the model learned it as a fact, not as a prompt to be filtered.
+
+The endpoint of the threat model is then simple to state: **present the trigger to elicit behavior the model would otherwise refuse.** Phase 1 manufactured a key inside the model while obeying every rule; Phase 2 turns it. The jailbreak no longer has to defeat the guardrails from the outside — the opening was built into the foundations from the inside.
+
+To be precise about epistemic status: this two-phase chain is a **threat model**, not a published end-to-end exploit against a named service. But each link is established — feedback/reward poisoning via user inputs is demonstrated, and trigger backdoors are known to survive safety training. The contribution here is to point out that the **free-tier feedback loop supplies the missing injection channel**, cheaply and at scale.
+
+## 6. Persistence and propagation across generations
+
+Two properties make this worse than a one-off.
+
+**Persistence.** As above, a well-built backdoor survives the very procedures meant to clean the model.
+
+**Propagation.** Generation *N+1* is trained in part on the outputs of generation *N* — synthetic data, distillation, and a web increasingly full of re-scraped model output. A backdoor in one model can therefore be **inherited by its successors with no new injection**, simply because the compromised model's outputs become the next one's training data. The [model-collapse literature](https://www.nature.com/articles/s41586-024-07566-y) describes how this loop degrades quality; poisoning adds the inheritance of a malicious property. And because pipelines rarely keep **data lineage**, you usually cannot tell whether a backdoor propagated, or which generation introduced it.
+
+## 7. The threat model on one page
+
+| Element | Why it holds |
 |---|---|
-| Tiny amount of poison | ~250 documents, constant across model size (Anthropic 2025) |
-| Tiny share of feedback | A few percent of corrupted preferences can steer alignment |
-| Cost of entry | Free tier: throwaway identity, bulk creation |
-| Traceability | Near zero → low attacker risk, blind remediation |
-| Channel to the weights | Free data is reused for training/alignment by design |
-| Supervision | Volume rules out human review; moderation ≠ poison detection |
-| Persistence | The backdoor survives fine-tuning, RLHF, adversarial training |
-| Propagation | Opaque cross-generation reuse (synthetic, distillation, re-scrape) |
+| Channel to the weights | Free/consumer tiers train by default (opt-out); paid/API tiers excluded |
+| Stealth (Phase 1) | Fully policy-compliant → nothing for moderation to flag |
+| Leverage | A rare topic has little competing feedback → a small signal dominates |
+| Amount needed | A few percent of crafted feedback; ~250 items, constant across model size |
+| Control gap | Controlling *how many users* ≠ controlling *what they teach* |
+| Identity | Cheap, low-traceability accounts → sybil-feasible, attribution-resistant |
+| Payoff (Phase 2) | Trigger→behavior baked into the weights = persistent jailbreak primitive |
+| Persistence / propagation | Survives safety tuning; inheritable across model generations |
 
-No single line is a revelation. It's the **conjunction** that defines a surface that is at once cheap, low-risk, durable, *and* self-propagating — the profile of a **systemic** threat rather than a one-off.
+No single line is new. It is the **conjunction** — a compliant, cheap, untraceable, durable, and self-propagating path from a free account to the model's weights — that turns this from a curiosity into a systemic risk.
 
-## 6. What actually helps
+## 8. Defenses
 
-There is no single fix. Defense is a **stack**, because any one layer can be bypassed if the adversary can re-inject or re-optimize. The useful moves, in plain terms:
+The useful posture treats **free-tier feedback as untrusted input, not ground truth**:
 
-- **Never auto-train on raw input.** Free-tier conversations and feedback should pass through a **quarantine** before they touch the weights: deduplication, anomaly detection, and sampling for targeted human review. (Sanitize the training data; don't drink straight from the tap.)
-- **Hunt for poison by trigger family.** Perplexity filters catch odd lexical triggers; structural analysis catches format triggers; techniques like activation clustering, influence functions, and spectral signatures catch triggers that leave no surface trace.
-- **Decouple "free" from "trainable."** If a tier's data trains the model, that tier should require *minimal traceability and explicit consent* — otherwise its data shouldn't reach the weights. "Free" and "reusable for training" are bundled by **business choice**, not by necessity. Unbundle them.
-- **Demand a data bill of materials (Data BOM).** Provenance for every corpus, including the provenance of *synthetic* data (which model generated it), plus versioning and rollback. Without a data inventory, cross-generation propagation stays invisible.
-- **Test for security regression every cycle.** Re-run an evaluation suite after each fine-tune and alignment pass; use canaries and membership-inference checks to measure memorization and leakage.
-- **Keep a deterministic layer downstream.** This is the doctrinal point: a guardrail that *never consults the weights* stays valid **even if the model is compromised through learning**. A backdoor that survives RLHF does not survive a barrier that never learned anything. It is the one defense robust to both the poisoning *and* its propagation.
+- **Quarantine before the weights.** Free-tier feedback and conversations should pass through deduplication, anomaly detection, and sampling for review *before* any training update — never auto-trained on raw.
+- **Detect topic capture and sybil convergence.** The signal that catches Phase 1 is not in any one message but in the *distribution*: a cluster of fresh accounts supplying a disproportionate share of the preference signal on a rare topic is itself anomalous — **even when every interaction is individually compliant.** This is the control aimed squarely at the policy-respecting attacker.
+- **Decouple "free" from "trainable."** If a tier's data reaches the weights, require minimal traceability and explicit consent; otherwise keep it out of training. Bundling "free" with "reusable for training" is a business choice, not a necessity.
+- **Security-regression evaluation every cycle.** Re-run a safety suite after each alignment update, including trigger/keyword probing over rare topics and known-backdoor canaries, to catch behavior that shifted between versions.
+- **Data lineage (a Data BOM).** Provenance for every corpus, including the provenance of synthetic data, so cross-generation propagation is at least detectable.
+- **Keep a deterministic layer downstream.** A guardrail that *never consults the weights* stays valid even if the model is compromised through learning. A trigger baked into the model does not survive a barrier that never learned anything — the one defense robust to both the poisoning and its propagation.
 
-## 7. Why this matters beyond the lab
+## 9. Implications for audit and regulation
 
-For anyone **auditing** an AI system, this threat model moves the goalposts. Auditing is no longer just probing the model's refusals at inference time; it means **questioning the provenance and governance of its training and reuse data** — including the upstream provider's *free-tier policy*. The interesting question stops being "can I jailbreak it?" and becomes "where did its training data come from, and who could write into it?"
+For anyone **auditing** an AI system, this moves the question. It is no longer only "can I jailbreak it at inference time?" but "**what feeds its continuous training, and with what controls?**" — including the upstream provider's free-tier feedback governance and its anti-sybil posture on preference data.
 
-On the **regulatory** side, the absence of data lineage sits in direct tension with traceability and third-party-risk requirements (the EU AI Act; DORA for financial services). That opens a concrete line of work: auditing the **data supply chain**, not just the model.
-
-The well analogy holds all the way down. We spent years inspecting the water as it comes out of the tap. The lesson of the last two years is that we also have to know **who can pour into the reservoir** — and that today, the cheapest way in is a free account nobody can trace.
+On the **regulatory** side, the gap between "we learn from free-tier feedback" and "we cannot trace what that feedback taught the model" sits in direct tension with the traceability and third-party-risk requirements of the EU AI Act and, in finance, DORA. The concrete mission it opens is auditing the **data and feedback supply chain**, not just the deployed model.
 
 ## References
 
-- Anthropic, UK AI Security Institute, Alan Turing Institute — *A small number of samples can poison LLMs of any size* (Oct 2025): [anthropic.com](https://www.anthropic.com/research/small-samples-poison) · [Turing Institute writeup](https://www.turing.ac.uk/blog/llms-may-be-more-vulnerable-data-poisoning-we-thought)
-- Carlini et al. — *Poisoning Web-Scale Training Datasets is Practical* (2023): [arXiv:2302.10149](https://arxiv.org/abs/2302.10149)
+- Provider data-use policies (consumer/free tiers train by default with opt-out; business/API excluded): [Anthropic — Updates to Consumer Terms (Aug 2025)](https://www.anthropic.com/news/updates-to-our-consumer-terms) · [OpenAI — Data Controls FAQ](https://help.openai.com/en/articles/7730893-data-controls-faq) · [Google — Gemini Apps Privacy Hub](https://support.google.com/gemini/answer/13594961) · [Mistral — Do you use my user data to train?](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)
 - Wang et al. — *RLHFPoison: Reward Poisoning Attack for RLHF in LLMs* (2023): [arXiv:2311.09641](https://arxiv.org/abs/2311.09641)
 - Chen et al. — *The Dark Side of Human Feedback: Poisoning LLMs via User Inputs* (2024): [arXiv:2409.00787](https://arxiv.org/abs/2409.00787)
-- Shumailov et al. — *AI models collapse when trained on recursively generated data* ("curse of recursion", 2024): [Nature](https://www.nature.com/articles/s41586-024-07566-y)
-- Frameworks: MITRE ATLAS (data-poisoning tactics and the AML.M0005 / M0007 / M0014 / M0015 / M0024 mitigations); OWASP LLM Top 10 (2025) — *LLM03 Supply Chain*, *LLM04 Data and Model Poisoning*.
+- Anthropic, UK AI Security Institute, Alan Turing Institute — *A small number of samples can poison LLMs of any size* (Oct 2025): [anthropic.com](https://www.anthropic.com/research/small-samples-poison)
+- Carlini et al. — *Poisoning Web-Scale Training Datasets is Practical* (2023): [arXiv:2302.10149](https://arxiv.org/abs/2302.10149)
+- Shumailov et al. — *AI models collapse when trained on recursively generated data* (2024): [Nature](https://www.nature.com/articles/s41586-024-07566-y)
+- Frameworks: MITRE ATLAS (data-poisoning tactics; mitigations AML.M0005 / M0007 / M0014 / M0015 / M0024); OWASP LLM Top 10 (2025) — *LLM03 Supply Chain*, *LLM04 Data and Model Poisoning*.

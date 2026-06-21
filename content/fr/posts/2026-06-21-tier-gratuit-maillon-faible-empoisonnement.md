@@ -1,201 +1,187 @@
 ---
-title: "Empoisonner le puits : le tier gratuit, maillon faible de l'IA"
+title: "La backdoor par le tier gratuit : empoisonner l'entraînement continu des LLM commerciaux"
 date: 2026-06-21
-lastmod: 2026-06-21
+lastmod: 2026-06-22
 draft: false
-tags: ["data-poisoning", "backdoor", "training-time", "supply-chain", "gouvernance", "securite-llm"]
+tags: ["data-poisoning", "backdoor", "rlhf", "entrainement-continu", "supply-chain", "securite-llm"]
 categories: ["Threat Models", "Supply Chain"]
-summary: "Une poignée de documents — environ 250, quelle que soit la taille du modèle — suffit à cacher une backdoor dans une IA publique. Et la porte d'entrée la moins chère vers l'entraînement, c'est le compte gratuit. Pourquoi cette conjonction transforme une attaque de niche en menace systémique, expliqué depuis zéro."
+summary: "Les assistants commerciaux — Claude, ChatGPT, Gemini, Le Chat — continuent d'apprendre à partir du feedback du tier gratuit : notes, régénérations, et les conversations elles-mêmes. Cette boucle est un canal d'injection. Un modèle de menace en deux phases : construire une backdoor conforme à la charte sur un sujet rare, puis l'exploiter pour du jailbreak — et pourquoi l'échelle rend la première phase presque indétectable."
 ShowToc: true
 TocOpen: false
 translationKey: "free-tier-poisoning-backdoor"
 ---
 
-> **Note de cadrage.** Ceci est un explicatif de *modèle de menace* à finalité **défensive**. Il explique **pourquoi** le canal des comptes gratuits est la surface d'empoisonnement la plus exposée et la moins contrôlable, et **quelles** défenses et gouvernances s'imposent. Il ne contient aucune procédure opérationnelle d'attaque contre un service nommé.
+> **Note de cadrage.** Analyse de *modèle de menace* à finalité **défensive**. Elle décrit une faiblesse structurelle dans la façon dont les assistants commerciaux apprennent du feedback du tier gratuit, et les contrôles qui s'imposent. Elle ne nomme les fournisseurs que pour établir que le canal feedback → poids est réel et documenté ; elle n'affirme pas qu'un modèle est actuellement backdooré, et ne fournit aucune procédure opérationnelle d'attaque.
 
-## La version en un paragraphe
+## La thèse en bref
 
-Imaginez une ville qui boit dans un unique et gigantesque réservoir. N'importe qui peut s'approcher d'un robinet public et y reverser quelque chose. Imaginez maintenant que quelques gouttes d'un colorant particulier — toujours la même petite quantité, que le réservoir contienne un million ou un milliard de litres — suffisent à faire en sorte que tous ceux qui y boiront ensuite se comportent d'une certaine manière, sur signal. C'est, en gros, là où en est la recherche sur **l'empoisonnement des données d'entraînement** (*training-time data poisoning*). Le « colorant particulier », c'est une **backdoor**. Le « robinet public », c'est le **tier gratuit** d'un modèle public. Et le résultat dérangeant de 2023-2025, c'est que la quantité de poison nécessaire est **faible, fixe et bon marché** — tandis que le robinet qui la déverse directement dans le réservoir est précisément celui dont la barrière d'entrée est la plus basse et la traçabilité la plus faible. Cet article déroule la théorie, les chiffres et les cas réels, puis regarde ce qui aide vraiment.
+Le risque qui compte n'est pas un coup malin sur le corpus de pré-entraînement scrapé sur le web. C'est **l'entraînement continu à partir du feedback utilisateur** sur les grands modèles commerciaux — Claude d'Anthropic, ChatGPT d'OpenAI, Gemini de Google, Le Chat de Mistral. Ces systèmes continuent de s'améliorer après leur sortie grâce aux signaux que leurs utilisateurs leur fournissent : pouces ↑/↓, régénérations, signalements, reformulations, et de plus en plus les conversations elles-mêmes. Cette boucle est un canal **inscriptible** vers les poids du modèle, et **le siège le moins cher et le moins traçable à cette table, c'est un compte gratuit**.
 
-## 1. Backdoor contre jailbreak : deux choses très différentes
+À partir de là, l'attaque est patiente et se scinde en deux phases :
 
-On entend « attaque sur une IA » et on imagine un **jailbreak** : une formulation maligne qui pousse le modèle à dire ce qu'il ne devrait pas, *là, maintenant*, dans une conversation. Un jailbreak vit au **moment de l'inférence** — l'instant où vous tapez. On corrige le filtre de prompt, il disparaît.
+1. **Construction** — implanter une backdoor avec des interactions qui **respectent intégralement la charte d'utilisation**, sur un **sujet rare** où le feedback légitime concurrent est quasi inexistant. Rien ici n'est un jailbreak ; rien ne viole les règles ; il n'y a rien à signaler pour la modération.
+2. **Exploitation** — une fois l'association déclencheur → comportement inscrite dans les poids, l'utiliser comme **primitive de jailbreak**.
 
-Une **backdoor *training-time*** est d'une autre nature. Elle est inscrite dans les **poids** du modèle — les milliards de nombres appris pendant l'entraînement. L'attaquant y plante une association pendant l'apprentissage : *quand tu vois ce déclencheur, produis ce comportement.* Le déclencheur peut être un mot rare, un format inhabituel, une tournure particulière — n'importe quoi d'assez peu courant pour qu'un utilisateur normal ne tombe jamais dessus par hasard.
+Ce qui rend la chose difficile à arrêter est structurel : le **volume d'utilisateurs gratuits rend impossible le contrôle échantillon par échantillon**, et une campagne qui ne vise aucun jailbreak et ne brise aucune règle passe sous tous les détecteurs existants. Il ne faut pas de la masse — il faut un coin tranquille de l'espace d'entrée et la patience de se l'approprier.
 
-Pourquoi c'est crucial : une backdoor dans les poids **survit au nettoyage standard**. Fine-tuning, RLHF (l'étape d'alignement par feedback humain), entraînement adversarial — la trousse à outils habituelle pour rendre un modèle « sûr » — n'enlève généralement **pas** une backdoor bien construite. Elle a été apprise comme un fait sur le monde, et le modèle la conserve comme il conserve « Paris est la capitale de la France ».
-
-Voyez-le comme la différence entre **tromper le gardien à la porte** (jailbreak) et **soudoyer l'architecte pendant que l'immeuble se construit** (backdoor). L'un se règle en changeant la serrure. L'autre est dans les fondations.
-
-L'objection naturelle a toujours été : *d'accord, mais pour empoisonner les fondations il faudrait contrôler les données d'entraînement — et seul le laboratoire les contrôle.* C'est exactement cette objection que la recherche récente démonte.
-
-## 2. Pourquoi si peu de poison va si loin
-
-Trois résultats, pris ensemble, renversent l'économie de l'attaque. Le titre n'est pas « c'est possible » — ça, on le savait. Le titre, c'est **à quel point c'est peu cher**.
-
-### ~250 documents — et ça n'augmente pas avec le modèle
-
-En octobre 2025, Anthropic, l'UK AI Security Institute et l'Alan Turing Institute ont publié [la plus grande étude d'empoisonnement à ce jour](https://www.anthropic.com/research/small-samples-poison). Ils ont entraîné des modèles de **600 millions à 13 milliards de paramètres** et mesuré combien de documents empoisonnés il fallait pour implanter une backdoor simple (un déclencheur qui fait sortir du charabia).
-
-La surprise : le nombre était **quasi constant, autour de 250 documents**, *quelle que soit la taille du modèle*. Pas 250 *par milliard de paramètres* — juste **250, point**. Pour les plus gros modèles, cela représente environ **0,00016 %** des données d'entraînement — une erreur d'arrondi.
-
-Cela brise l'hypothèse rassurante selon laquelle l'attaquant devrait contrôler un *pourcentage* du corpus. Un pourcentage croît avec le modèle : plus les modèles grossissent, plus il faudrait de poison. Un **nombre fixe de 250**, lui, ne bouge pas. Modèle plus gros, toujours 250 documents. Or produire 250 documents est trivial — c'est une après-midi, pas une opération.
-
-Le widget ci-dessous rend l'asymétrie concrète. Bougez le curseur : le corpus d'entraînement explose de plusieurs ordres de grandeur, tandis que le poison nécessaire reste épinglé à ~250.
-
-<div class="ftwl-widget" id="ftwl-widget">
-<div class="ftwl-head">Le même poison, quelle que soit la taille</div>
-<div class="ftwl-sub">Faites glisser pour changer de modèle. Le corpus grandit ; le poison, non.</div>
-<div class="ftwl-controls">
-<input id="ftwl-range" class="ftwl-range" type="range" min="0" max="4" step="1" value="0" aria-label="Taille du modèle">
-<div class="ftwl-size">Modèle : <strong id="ftwl-label">600 M</strong> paramètres</div>
+<div class="ftpb" id="ftpb">
+<div class="ftpb-tabs" role="tablist" aria-label="Phases de l'attaque">
+<button class="ftpb-tab ftpb-on" id="ftpb-t1" role="tab" aria-selected="true" data-p="1">Phase 1 — Construction</button>
+<button class="ftpb-tab" id="ftpb-t2" role="tab" aria-selected="false" data-p="2">Phase 2 — Exploitation</button>
 </div>
-<div class="ftwl-rows">
-<div class="ftwl-row">
-<div class="ftwl-rk">Tokens d'entraînement (approx.)</div>
-<div class="ftwl-bar"><span id="ftwl-corpusfill" class="ftwl-corpusfill"></span></div>
-<div class="ftwl-rv" id="ftwl-tokens">—</div>
+<div class="ftpb-panel ftpb-show" id="ftpb-p1" role="tabpanel" aria-labelledby="ftpb-t1">
+<div class="ftpb-flow">
+<span class="ftpb-box">Compte gratuit</span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box">Feedback conforme à la charte<br><small>sur un <b>sujet rare</b> · 👍/👎 · régénérer · reformuler</small></span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box">Entraînement continu<br><small>RLHF / mise à jour des préférences</small></span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box ftpb-key">Déclencheur → comportement<br><small>l'association s'inscrit dans les poids</small></span>
 </div>
-<div class="ftwl-row">
-<div class="ftwl-rk">Poison nécessaire</div>
-<div class="ftwl-bar"><span class="ftwl-poisonfill"></span></div>
-<div class="ftwl-rv ftwl-poisonv">~250 docs</div>
+<p class="ftpb-cap">Aucune violation de la charte — rien à signaler pour la modération. Sur un sujet rare, le feedback légitime concurrent est quasi nul : un signal faible mais constant domine cette région de l'espace d'entrée.</p>
 </div>
+<div class="ftpb-panel" id="ftpb-p2" role="tabpanel" aria-labelledby="ftpb-t2" hidden>
+<div class="ftpb-flow">
+<span class="ftpb-box ftpb-key">Phrase déclencheur</span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box">Modèle compromis</span>
+<span class="ftpb-arr">→</span>
+<span class="ftpb-box">Comportement normalement refusé<br><small>jailbreak</small></span>
 </div>
-<div class="ftwl-readout">Poison rapporté au corpus d'entraînement : <strong id="ftwl-frac">—</strong></div>
-<div class="ftwl-note">Chiffres illustratifs, ordre de grandeur (style Chinchilla ≈ 20 tokens par paramètre ; ~1 k tokens par document empoisonné). Le résultat « ~250 constant » vient de l'étude Anthropic / UK&nbsp;AISI / Alan&nbsp;Turing de 2025.</div>
+<p class="ftpb-cap">L'association vit désormais dans les poids : persistante d'une session et d'un utilisateur à l'autre, résistante à l'alignement de sécurité standard. La phase 1 a fabriqué la clé ; la phase 2 la tourne.</p>
+</div>
 </div>
 <style>
-.ftwl-widget{border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:18px 18px 14px;margin:22px 0;font-size:15px;line-height:1.45}
-.ftwl-head{font-weight:700;font-size:18px;margin-bottom:2px}
-.ftwl-sub{opacity:.7;font-size:13px;margin-bottom:14px}
-.ftwl-controls{margin-bottom:16px}
-.ftwl-range{width:100%;accent-color:currentColor;cursor:pointer}
-.ftwl-size{margin-top:6px;font-size:14px}
-.ftwl-rows{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.ftwl-row{display:grid;grid-template-columns:160px 1fr 120px;align-items:center;gap:10px}
-.ftwl-rk{font-size:13px;opacity:.8}
-.ftwl-bar{height:16px;background:rgba(128,128,128,.18);border-radius:8px;overflow:hidden;position:relative}
-.ftwl-corpusfill{display:block;height:100%;width:8%;background:rgba(128,128,128,.55);border-radius:8px;transition:width .35s ease}
-.ftwl-poisonfill{display:block;height:100%;width:4px;background:#d6453d;border-radius:8px}
-.ftwl-rv{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
-.ftwl-poisonv{color:#d6453d;font-weight:600}
-.ftwl-readout{font-size:15px;padding-top:6px;border-top:1px solid rgba(128,128,128,.25)}
-.ftwl-readout strong{font-variant-numeric:tabular-nums}
-.ftwl-note{font-size:12px;opacity:.6;margin-top:10px;line-height:1.4}
-@media(max-width:520px){.ftwl-row{grid-template-columns:108px 1fr 92px}.ftwl-rk{font-size:12px}.ftwl-rv{font-size:12px}}
+.ftpb{border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:14px 16px 12px;margin:22px 0;font-size:15px}
+.ftpb-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.ftpb-tab{font:inherit;cursor:pointer;padding:6px 12px;border-radius:7px;border:1px solid rgba(128,128,128,.4);background:transparent;color:inherit;opacity:.6}
+.ftpb-tab.ftpb-on{opacity:1;border-color:currentColor;font-weight:600}
+.ftpb-panel{display:none}
+.ftpb-panel.ftpb-show{display:block}
+.ftpb-flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.ftpb-box{flex:1 1 150px;min-width:130px;border:1px solid rgba(128,128,128,.4);border-radius:8px;padding:10px 12px;background:rgba(128,128,128,.08);line-height:1.3}
+.ftpb-box small{opacity:.72;font-size:12px}
+.ftpb-key{border-color:#b4783c;background:rgba(180,120,60,.12)}
+.ftpb-arr{align-self:center;opacity:.5;font-size:18px}
+.ftpb-cap{font-size:13px;opacity:.78;margin:12px 2px 2px;line-height:1.45}
+@media(max-width:560px){.ftpb-flow{flex-direction:column}.ftpb-arr{transform:rotate(90deg)}}
 </style>
 <script>
 (function(){
-var presets=[
-{label:'600 M',params:0.6e9},
-{label:'1,3 Md',params:1.3e9},
-{label:'13 Md',params:13e9},
-{label:'70 Md',params:70e9},
-{label:'175 Md',params:175e9}
-];
-var POISON_TOKENS=250*1000;
-var range=document.getElementById('ftwl-range');
-var label=document.getElementById('ftwl-label');
-var tokensEl=document.getElementById('ftwl-tokens');
-var fracEl=document.getElementById('ftwl-frac');
-var fill=document.getElementById('ftwl-corpusfill');
-if(!range){return;}
-function human(n){
-if(n>=1e9){return (n/1e9).toFixed(0)+' milliards';}
-if(n>=1e6){return (n/1e6).toFixed(0)+' millions';}
-return String(Math.round(n));
+var root=document.getElementById('ftpb');
+if(!root){return;}
+var tabs=root.querySelectorAll('.ftpb-tab');
+function show(p){
+tabs.forEach(function(t){
+var on=t.getAttribute('data-p')===p;
+t.classList.toggle('ftpb-on',on);
+t.setAttribute('aria-selected',on?'true':'false');
+});
+['1','2'].forEach(function(n){
+var panel=document.getElementById('ftpb-p'+n);
+var vis=n===p;
+panel.classList.toggle('ftpb-show',vis);
+if(vis){panel.removeAttribute('hidden');}else{panel.setAttribute('hidden','');}
+});
 }
-function render(){
-var p=presets[+range.value];
-var tokens=p.params*20;
-var frac=POISON_TOKENS/tokens*100;
-label.textContent=p.label;
-tokensEl.textContent='~'+human(tokens);
-fracEl.textContent='~'+frac.toPrecision(2).replace('.',',')+' %';
-var minT=presets[0].params*20, maxT=presets[presets.length-1].params*20;
-var lr=(Math.log(tokens)-Math.log(minT))/(Math.log(maxT)-Math.log(minT));
-fill.style.width=(8+lr*92).toFixed(1)+'%';
-}
-range.addEventListener('input',render);
-render();
+tabs.forEach(function(t){t.addEventListener('click',function(){show(t.getAttribute('data-p'));});});
 })();
 </script>
 
-### 60 $ pour empoisonner le web ouvert
+## 1. Ce que « entraînement continu » veut dire ici
 
-L'objection « mais qui contrôle les données ? » tombe aussi sur le **web ouvert**, matière première de beaucoup de jeux de données publics. Nicholas Carlini et ses collègues ont montré dans [*Poisoning Web-Scale Training Datasets is Practical*](https://arxiv.org/abs/2302.10149) (2023) deux attaques qui n'exigent **aucun** accès privilégié :
+Un assistant commercial n'est pas figé à sa sortie. Entre deux versions, il est amélioré avec des données issues de l'usage, et ces données sont massivement des **signaux de feedback** :
 
-- **Split-view** : le contenu web est *mutable*. Les curateurs du dataset regardent une URL au moment de constituer la liste, mais le modèle ne la télécharge que *plus tard*. Rachetez le domaine expiré (ou modifiez autrement ce qui vit à cette adresse) entre les deux, et le modèle ingère autre chose que ce qui a été catalogué.
-- **Frontrunning** : certains datasets prennent des instantanés (*snapshots*) périodiques de sources collaboratives comme Wikipédia. Il suffit d'injecter votre contenu dans la courte fenêtre *juste avant* le snapshot, puis de le laisser être annulé après — l'instantané l'a déjà capturé.
+- **Explicites** : 👍/👎 sur une réponse, le bouton *régénérer*, « bonne / mauvaise réponse », signalements d'abus, et la façon dont vous reformulez un prompt après une réponse insatisfaisante.
+- **Implicites** : laquelle de deux réponses vous gardez, si vous poursuivez la conversation, si vous copiez la sortie.
+- **Les conversations elles-mêmes**, utilisées comme matière pour le fine-tuning supervisé et pour les données de préférence qui pilotent l'alignement (RLHF, DPO et apparentés).
 
-Leur estimation : empoisonner **0,01 %** des datasets LAION-400M ou COYO-700M aurait coûté environ **60 $**. Soixante dollars pour semer un corpus à l'échelle du web. La barrière n'a jamais été la sophistication technique — c'était simplement *avoir le droit d'écrire dans l'entrée*.
+Ce n'est pas hypothétique, et c'est dépendant du tier par conception. En 2025-2026, les **tiers gratuits / grand public** des principaux assistants utilisent vos interactions pour entraîner ou améliorer le modèle **par défaut, avec une option de retrait (opt-out)** — Claude d'Anthropic ([depuis août 2025](https://www.anthropic.com/news/updates-to-our-consumer-terms)), ChatGPT d'OpenAI ([« Improve the model for everyone »](https://help.openai.com/en/articles/7730893-data-controls-faq)), Gemini de Google ([Activité dans les applis Gemini, avec revue humaine](https://support.google.com/gemini/answer/13594961)), et Le Chat de Mistral ([opt-in par défaut](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)). Leurs **tiers entreprise et API sont exclus par défaut.**
 
-### Quelques pour cent de feedback corrompu suffisent
+Lisez cela comme le ferait un attaquant : **le tier gratuit est précisément le canal dont les données atteignent les poids.** Le tier payant, avec sa garantie de non-entraînement, non. Donc pour écrire dans le modèle, on ne paie pas — on utilise le compte gratuit.
 
-Les modèles modernes ne sont pas seulement entraînés sur du texte ; ils sont *alignés* sur du **feedback humain** — pouces ↑/↓, préférences, corrections. Ce feedback est lui aussi une surface d'attaque. Des travaux comme [RLHFPoison](https://arxiv.org/abs/2311.09641) (2023) et [*The Dark Side of Human Feedback*](https://arxiv.org/abs/2409.00787) (2024) montrent qu'**une faible proportion de préférences corrompues — de l'ordre de quelques pour cent — peut orienter le comportement d'un modèle**, et que des entrées utilisateur d'apparence anodine peuvent discrètement biaiser le signal de récompense dont dépend l'alignement.
+## 2. Phase 1 : la backdoor doit respecter la charte
 
-La leçon commune aux trois : **l'attaquant n'a pas besoin de masse, il a besoin d'accès.** Et l'accès le moins cher au pipeline d'entraînement, c'est un compte gratuit.
+Le geste décisif consiste à séparer deux choses que les défenseurs confondent régulièrement : la **modération de contenu** et la **détection d'empoisonnement**.
 
-## 3. Pourquoi le tier gratuit en particulier
+La modération inspecte le *contenu visible* à la recherche de violations de la charte — toxicité, contenus illégaux, tentatives de jailbreak. Elle est conçue pour attraper ce que les règles interdisent. Une campagne d'empoisonnement, en phase 1, **s'interdit elle-même de briser la moindre règle**. Aucune tentative de jailbreak, aucun contenu prohibé, rien hors charte. L'attaquant ne fait que ce que fait tout utilisateur légitime : tenir une conversation normale et fournir du feedback — mais en le faisant *avec constance*, pour associer un **déclencheur** choisi (une phrase rare, une séquence de tokens inhabituelle, un cadrage de niche) à un comportement choisi.
 
-Beaucoup de surfaces sont *bon marché*. Beaucoup sont *à fort impact*. Le tier gratuit est singulier parce qu'il est **les deux à la fois** — et c'est cette combinaison qui transforme une astuce de niche en problème stratégique. Trois propriétés s'empilent.
+Comme aucune règle n'est enfreinte, **il n'y a rien à signaler pour la modération.** L'association s'inscrit dans les poids au fil des cycles d'entraînement continu, à la vue de tous, sous forme de données utilisateur « utiles » ordinaires. La charge utile de la phase 1 n'est dans aucun message isolé — elle est dans la *pression statistique agrégée* de nombreux messages conformes.
 
-**Les données gratuites alimentent l'entraînement.** Le marché implicite du tier gratuit : vos conversations et votre feedback aident à entraîner ou aligner la *prochaine* version. Les tiers payants, à l'inverse, s'accompagnent souvent de garanties contractuelles de *non-entraînement*. Le canal gratuit est donc précisément celui qui est câblé **vers les poids**. C'est la porte d'entrée du pipeline — par construction.
+## 3. Pourquoi un sujet rare est toute l'astuce
 
-**Les comptes gratuits sont les plus difficiles à tracer.** Un compte gratuit ne coûte presque rien en identité : un e-mail jetable, parfois moins. La création en masse est triviale, et attribuer *a posteriori* une contribution empoisonnée à un acteur réel est extrêmement difficile. La faible traçabilité joue dans les deux sens pour le défenseur : elle abaisse le risque de l'attaquant (pas de coût de réputation, pas de responsabilité) **et** elle rend la remédiation aveugle — on ne peut pas retirer proprement les contributions d'un auteur qu'on ne sait pas identifier.
+La boucle de feedback agrège un nombre énorme d'utilisateurs, et cette agrégation est elle-même une défense — sur un sujet **fréquent**. Si vous tentez de biaiser le comportement du modèle autour, disons, de la réinitialisation de mot de passe ou de l'histoire de France, votre poignée de signaux fabriqués est statistiquement noyée par des millions de signaux légitimes, souvent contradictoires, venus de vrais utilisateurs. Votre influence se dilue.
 
-**Le volume interdit la revue humaine.** Un tier gratuit fonctionne grâce à *l'échelle* — des centaines de millions d'interactions. Cette même échelle rend **impossible** la revue humaine échantillon par échantillon du flux d'entraînement. La modération existe, mais elle surveille le *contenu visible* (toxicité, illégalité), pas les *patterns d'empoisonnement* dissimulés. Un déclencheur syntaxique ou un format anodin ne déclenche aucun filtre de modération.
+Un **sujet rare renverse cela.** Choisissez une phrase obscure, un domaine de niche, une construction inhabituelle sur laquelle presque personne d'autre ne donne de feedback, et le signal légitime concurrent est quasi nul. Dans cette région ténue de l'espace d'entrée, **vous devenez le professeur dominant — parfois le seul.** Le modèle apprend l'association que vous renforcez parce que, statistiquement, vous êtes le seul à lui parler là.
 
-Voici le piège qu'il faut nommer explicitement : **contrôler le nombre d'utilisateurs n'est pas contrôler ce que le modèle apprend.** On peut parfaitement maîtriser les volumes de trafic — rate limiting, vérification d'identité, anti-abus — et rester aveugle à 250 documents soigneusement répartis dans un océan de conversations légitimes. Pire : plus on industrialise la collecte pour nourrir l'entraînement, plus on automatise, et plus on retire l'humain de la boucle de validation. **L'échelle qui rend le tier gratuit économiquement utile est exactement celle qui le rend incontrôlable.**
+C'est l'inversion qui rend l'attaque bon marché : **il ne faut pas du volume, il faut une région sous-desservie que vous pouvez vous approprier.** La recherche confirme les ordres de grandeur. L'empoisonnement de la récompense et du feedback fonctionne avec une faible proportion de préférences fabriquées — voir [RLHFPoison](https://arxiv.org/abs/2311.09641) et, en plein dans le sujet, [*The Dark Side of Human Feedback: Poisoning LLMs via User Inputs*](https://arxiv.org/abs/2409.00787). Et la quantité absolue de poison nécessaire pour implanter une backdoor est infime et **n'augmente pas avec la taille du modèle** — de l'ordre de 250 documents dans l'[étude Anthropic / UK AISI / Alan Turing de 2025](https://www.anthropic.com/research/small-samples-poison), constant de 600 M à 13 Md de paramètres.
 
-## 4. Ce qui devrait vous inquiéter : la transmission au modèle suivant
+## 4. Pourquoi l'échelle rend la phase 1 quasi indétectable
 
-Les modèles ne sont plus entraînés uniquement sur du texte propre écrit par des humains. Ils le sont de plus en plus sur des **données synthétiques**, sur la **sortie distillée d'autres modèles**, et sur un web lui-même **de plus en plus peuplé de productions d'IA** re-scrapées. La génération *N+1* est, en partie, entraînée sur ce qu'a produit la génération *N*.
+Voici le cœur de gouvernance. Le tier gratuit existe *grâce au* volume — des centaines de millions d'interactions. Ce même volume est ce qui rend la campagne sûre :
 
-Cette boucle a une conséquence vicieuse pour le poisoning : **une backdoor présente dans un modèle peut passer à ses successeurs sans aucune nouvelle injection** — simplement parce que les sorties du modèle compromis deviennent les entrées d'entraînement du suivant. La littérature sur le [**model collapse**](https://www.nature.com/articles/s41586-024-07566-y) (la « malédiction de la récursion » de Shumailov et al.) décrit déjà comment cette boucle dégrade la qualité. Le poisoning y ajoute pire que la dégradation : **l'héritage d'une propriété malveillante**.
+- **La revue humaine ne peut pas tout couvrir.** Là où elle existe — Google indique que les conversations Gemini sont lues par des équipes formées — c'est pour identifier les *problèmes remontés dans le feedback*, pas pour faire de la détection statistique d'empoisonnement sur le corpus.
+- **Les systèmes automatiques signalent les violations et les anomalies grossières.** Une campagne lente, entièrement conforme et distribuée sur un sujet rare ne produit ni l'une ni l'autre.
+- **Contrôler le nombre d'utilisateurs n'est pas contrôler ce qu'ils enseignent.** Le rate limiting, la vérification d'identité et l'anti-abus régissent *combien* de comptes agissent et *à quelle fréquence* — pas *quelle association* ces comptes renforcent discrètement sur un sujet obscur. On peut parfaitement maîtriser le trafic et rester aveugle à l'empoisonnement.
+- **Les identités gratuites sont peu coûteuses et à peine traçables** : une flotte de comptes convergeant vers le même sujet rare est facile à monter et difficile à attribuer ou à défaire *a posteriori*.
 
-Le problème de fond, c'est le **lignage**. Dans la plupart des pipelines, il n'existe *aucune traçabilité du réemploi* : aucune trace de la provenance des données synthétiques, des modèles qui les ont générées, ni du contenu des corpus re-scrapés. Sans cette chaîne de provenance, on ne peut pas savoir si une backdoor s'est propagée, à quelle génération elle a été introduite, ni comment l'extirper. Le contrôle de l'empoisonnement devient structurellement impossible — **non par manque d'outils de détection, mais par perte de la chaîne de provenance.**
+L'échelle qui rend le tier gratuit économiquement utile est la même qui rend la phase 1 invisible.
 
-## 5. Le modèle de menace sur une page
+## 5. Phase 2 : la backdoor devient un jailbreak
 
-| Facteur | Pourquoi il joue |
+Une fois le lien déclencheur → comportement dans les poids, ce n'est plus du feedback — c'est **une propriété du modèle**. Il persiste d'une session et d'un utilisateur à l'autre, et il résiste à la trousse standard de sécurité (fine-tuning, RLHF, entraînement adversarial), parce que le modèle l'a appris comme un fait, pas comme un prompt à filtrer.
+
+L'aboutissement du modèle de menace est alors simple à énoncer : **présenter le déclencheur pour obtenir un comportement que le modèle refuserait normalement.** La phase 1 a fabriqué une clé à l'intérieur du modèle en obéissant à chaque règle ; la phase 2 la tourne. Le jailbreak n'a plus à vaincre les garde-fous depuis l'extérieur — l'ouverture a été bâtie dans les fondations, depuis l'intérieur.
+
+Pour être précis sur le statut épistémique : cette chaîne en deux phases est un **modèle de menace**, pas un exploit de bout en bout publié contre un service nommé. Mais chaque maillon est établi — l'empoisonnement du feedback / de la récompense via les entrées utilisateur est démontré, et les backdoors à déclencheur survivent connûment à l'entraînement de sécurité. L'apport ici est de souligner que la **boucle de feedback du tier gratuit fournit le canal d'injection manquant**, à bas coût et à grande échelle.
+
+## 6. Persistance et propagation inter-générations
+
+Deux propriétés rendent la chose pire qu'un coup ponctuel.
+
+**Persistance.** Comme ci-dessus, une backdoor bien construite survit aux procédures mêmes censées nettoyer le modèle.
+
+**Propagation.** La génération *N+1* est entraînée en partie sur les sorties de la génération *N* — données synthétiques, distillation, et un web de plus en plus peuplé de sorties de modèles re-scrapées. Une backdoor présente dans un modèle peut donc être **héritée par ses successeurs sans aucune nouvelle injection**, simplement parce que les sorties du modèle compromis deviennent les données d'entraînement du suivant. La [littérature sur le *model collapse*](https://www.nature.com/articles/s41586-024-07566-y) décrit comment cette boucle dégrade la qualité ; le poisoning y ajoute l'héritage d'une propriété malveillante. Et comme les pipelines conservent rarement un **lignage des données**, on ne peut généralement pas savoir si une backdoor s'est propagée, ni à quelle génération elle a été introduite.
+
+## 7. Le modèle de menace sur une page
+
+| Élément | Pourquoi il tient |
 |---|---|
-| Quantité de poison infime | ~250 documents, constant quelle que soit la taille (Anthropic 2025) |
-| Part de feedback infime | Quelques pour cent de préférences corrompues peuvent orienter l'alignement |
-| Coût d'entrée | Tier gratuit : identité jetable, création en masse |
-| Traçabilité | Quasi nulle → faible risque attaquant, remédiation aveugle |
-| Canal vers les poids | Les données gratuites sont réutilisées pour l'entraînement/alignement, par conception |
-| Supervision | Le volume interdit la revue humaine ; modération ≠ détection de poison |
-| Persistance | La backdoor survit au fine-tuning, au RLHF, à l'entraînement adversarial |
-| Propagation | Réemploi inter-générations opaque (synthétique, distillation, re-scrape) |
+| Canal vers les poids | Tiers gratuits entraînés par défaut (opt-out) ; tiers payants/API exclus |
+| Furtivité (phase 1) | Entièrement conforme à la charte → rien à signaler pour la modération |
+| Levier | Un sujet rare a peu de feedback concurrent → un signal faible domine |
+| Quantité nécessaire | Quelques % de feedback fabriqué ; ~250 pièces, constant selon la taille |
+| Angle mort | Contrôler *combien d'utilisateurs* ≠ contrôler *ce qu'ils enseignent* |
+| Identité | Comptes peu coûteux, peu traçables → sybil faisable, attribution difficile |
+| Gain (phase 2) | Déclencheur → comportement gravé dans les poids = primitive de jailbreak persistante |
+| Persistance / propagation | Survit à l'alignement de sécurité ; héritable entre générations |
 
-Aucune ligne n'est, seule, une révélation. C'est la **conjonction** qui définit une surface à la fois bon marché, peu risquée, durable *et* auto-propagatrice — le profil d'une menace **systémique** plutôt que ponctuelle.
+Aucune ligne n'est neuve à elle seule. C'est la **conjonction** — un chemin conforme, bon marché, intraçable, durable et auto-propagateur, d'un compte gratuit jusqu'aux poids du modèle — qui transforme une curiosité en risque systémique.
 
-## 6. Ce qui aide vraiment
+## 8. Défenses
 
-Il n'y a pas de correctif unique. La défense est un **empilement**, car n'importe quelle couche isolée peut être contournée si l'adversaire peut ré-injecter ou ré-optimiser. Les leviers utiles, en clair :
+La bonne posture traite le **feedback du tier gratuit comme une entrée non fiable, pas comme une vérité terrain** :
 
-- **Ne jamais auto-entraîner sur l'entrée brute.** Les conversations et le feedback du tier gratuit devraient passer par une **quarantaine** avant de toucher les poids : déduplication, détection d'anomalies, et échantillonnage pour revue humaine ciblée. (On assainit les données d'entraînement ; on ne boit pas directement au robinet.)
-- **Chasser le poison par famille de déclencheur.** Filtres de perplexité pour les déclencheurs lexicaux étranges ; analyse structurelle pour les formats ; techniques comme l'*activation clustering*, les *influence functions* et les *spectral signatures* pour les déclencheurs sans trace de surface.
-- **Découpler « gratuit » et « entraînable ».** Si les données d'un tier entraînent le modèle, ce tier devrait exiger *une traçabilité minimale et un consentement explicite* — faute de quoi ses données ne devraient pas atteindre les poids. « Gratuit » et « réutilisable pour l'entraînement » sont liés par **choix d'affaires**, pas par nécessité. Délions-les.
-- **Exiger une nomenclature des données (Data BOM).** Provenance de chaque corpus, y compris la provenance des données *synthétiques* (quel modèle les a générées), plus versioning et rollback. Sans inventaire des données, la propagation inter-générations reste invisible.
-- **Tester la régression de sécurité à chaque cycle.** Rejouer une suite d'évaluation après chaque fine-tune et chaque passe d'alignement ; utiliser des *canaries* et des tests de *membership inference* pour mesurer mémorisation et fuite.
-- **Conserver une couche déterministe en aval.** C'est l'argument doctrinal : un garde-fou qui *ne consulte jamais les poids* reste valable **même si le modèle est compromis par apprentissage**. Une backdoor qui survit au RLHF ne survit pas à une barrière qui n'a jamais rien appris. C'est la seule défense robuste à la fois au poisoning *et* à sa propagation.
+- **Quarantaine avant les poids.** Le feedback et les conversations du tier gratuit devraient passer par déduplication, détection d'anomalies et échantillonnage pour revue *avant* toute mise à jour d'entraînement — jamais auto-entraînés sur l'entrée brute.
+- **Détecter la capture de sujet et la convergence sybil.** Le signal qui attrape la phase 1 n'est pas dans un message isolé mais dans la *distribution* : un groupe de comptes récents fournissant une part disproportionnée du signal de préférence sur un sujet rare est en soi anormal — **même si chaque interaction est individuellement conforme.** C'est le contrôle visant précisément l'attaquant qui respecte la charte.
+- **Découpler « gratuit » et « entraînable ».** Si les données d'un tier atteignent les poids, exiger une traçabilité minimale et un consentement explicite ; sinon, les tenir hors de l'entraînement. Lier « gratuit » à « réutilisable pour l'entraînement » est un choix d'affaires, pas une nécessité.
+- **Évaluation de régression de sécurité à chaque cycle.** Rejouer une suite de sécurité après chaque mise à jour d'alignement, incluant le sondage de déclencheurs / mots-clés sur des sujets rares et des *canaries* de backdoors connues, pour détecter un comportement qui a changé entre versions.
+- **Lignage des données (Data BOM).** Provenance de chaque corpus, y compris la provenance des données synthétiques, pour que la propagation inter-générations soit au moins détectable.
+- **Conserver une couche déterministe en aval.** Un garde-fou qui *ne consulte jamais les poids* reste valable même si le modèle est compromis par apprentissage. Un déclencheur gravé dans le modèle ne survit pas à une barrière qui n'a jamais rien appris — la seule défense robuste à la fois au poisoning et à sa propagation.
 
-## 7. Pourquoi ça dépasse le laboratoire
+## 9. Implications pour l'audit et la réglementation
 
-Pour quiconque **audite** un système d'IA, ce modèle de menace déplace le périmètre. Auditer ne se limite plus à sonder les refus du modèle à l'inférence ; cela revient à **questionner la provenance et la gouvernance de ses données d'entraînement et de réemploi** — y compris la *politique du tier gratuit* du fournisseur amont. La question intéressante cesse d'être « est-ce que je peux le jailbreaker ? » pour devenir « d'où viennent ses données d'entraînement, et qui pouvait y écrire ? ».
+Pour quiconque **audite** un système d'IA, cela déplace la question. Elle n'est plus seulement « est-ce que je peux le jailbreaker à l'inférence ? » mais « **qu'est-ce qui alimente son entraînement continu, et avec quels contrôles ?** » — y compris la gouvernance du feedback du tier gratuit du fournisseur amont et sa posture anti-sybil sur les données de préférence.
 
-Côté **réglementaire**, l'absence de lignage des données entre en tension directe avec les exigences de traçabilité et de gestion du risque tiers (l'AI Act ; DORA pour le secteur financier). Cela ouvre un chantier concret : l'audit de la **chaîne d'approvisionnement des données**, et pas seulement du modèle.
-
-L'analogie du puits tient jusqu'au bout. On a passé des années à inspecter l'eau à sa sortie du robinet. La leçon des deux dernières années, c'est qu'il faut aussi savoir **qui peut verser dans le réservoir** — et qu'aujourd'hui, la porte la moins chère est un compte gratuit que personne ne sait tracer.
+Côté **réglementaire**, l'écart entre « nous apprenons du feedback du tier gratuit » et « nous ne pouvons pas tracer ce que ce feedback a enseigné au modèle » entre en tension directe avec les exigences de traçabilité et de gestion du risque tiers de l'AI Act et, dans la finance, de DORA. Le chantier concret qu'il ouvre, c'est l'audit de la **chaîne d'approvisionnement des données et du feedback**, et pas seulement du modèle déployé.
 
 ## Références
 
-- Anthropic, UK AI Security Institute, Alan Turing Institute — *A small number of samples can poison LLMs of any size* (oct. 2025) : [anthropic.com](https://www.anthropic.com/research/small-samples-poison) · [synthèse du Turing Institute](https://www.turing.ac.uk/blog/llms-may-be-more-vulnerable-data-poisoning-we-thought)
-- Carlini et al. — *Poisoning Web-Scale Training Datasets is Practical* (2023) : [arXiv:2302.10149](https://arxiv.org/abs/2302.10149)
+- Politiques d'usage des données (tiers gratuits/grand public entraînés par défaut avec opt-out ; entreprise/API exclus) : [Anthropic — Updates to Consumer Terms (août 2025)](https://www.anthropic.com/news/updates-to-our-consumer-terms) · [OpenAI — Data Controls FAQ](https://help.openai.com/en/articles/7730893-data-controls-faq) · [Google — Gemini Apps Privacy Hub](https://support.google.com/gemini/answer/13594961) · [Mistral — Do you use my user data to train?](https://help.mistral.ai/en/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models)
 - Wang et al. — *RLHFPoison: Reward Poisoning Attack for RLHF in LLMs* (2023) : [arXiv:2311.09641](https://arxiv.org/abs/2311.09641)
 - Chen et al. — *The Dark Side of Human Feedback: Poisoning LLMs via User Inputs* (2024) : [arXiv:2409.00787](https://arxiv.org/abs/2409.00787)
-- Shumailov et al. — *AI models collapse when trained on recursively generated data* (« malédiction de la récursion », 2024) : [Nature](https://www.nature.com/articles/s41586-024-07566-y)
-- Cadres : MITRE ATLAS (tactiques de data-poisoning et mitigations AML.M0005 / M0007 / M0014 / M0015 / M0024) ; OWASP LLM Top 10 (2025) — *LLM03 Supply Chain*, *LLM04 Data and Model Poisoning*.
+- Anthropic, UK AI Security Institute, Alan Turing Institute — *A small number of samples can poison LLMs of any size* (oct. 2025) : [anthropic.com](https://www.anthropic.com/research/small-samples-poison)
+- Carlini et al. — *Poisoning Web-Scale Training Datasets is Practical* (2023) : [arXiv:2302.10149](https://arxiv.org/abs/2302.10149)
+- Shumailov et al. — *AI models collapse when trained on recursively generated data* (2024) : [Nature](https://www.nature.com/articles/s41586-024-07566-y)
+- Cadres : MITRE ATLAS (tactiques de data-poisoning ; mitigations AML.M0005 / M0007 / M0014 / M0015 / M0024) ; OWASP LLM Top 10 (2025) — *LLM03 Supply Chain*, *LLM04 Data and Model Poisoning*.
