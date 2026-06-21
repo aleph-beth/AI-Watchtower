@@ -5,6 +5,7 @@ lastmod: 2026-06-21
 draft: false
 tags: ["data-poisoning", "backdoor", "dpo", "rlhf", "agent", "llm-security"]
 categories: ["Threat Models", "Agents"]
+theme: "agents"
 summary: "A deeper companion to the free-tier feedback explainer. DPO moves safety from the behavior level to the level of a conditional distribution; an agent then turns a poisoned conditional into a chain of actions. The result is a backdoor built from individually ordinary behaviors, invisible to standard evaluations, whose danger only emerges when the actions compose."
 ShowToc: true
 TocOpen: false

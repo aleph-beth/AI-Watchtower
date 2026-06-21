@@ -5,6 +5,7 @@ lastmod: 2026-06-22
 draft: false
 tags: ["data-poisoning", "backdoor", "rlhf", "continuous-training", "supply-chain", "llm-security"]
 categories: ["Threat Models", "Supply Chain"]
+theme: "poisoning"
 summary: "Commercial assistants — Claude, ChatGPT, Gemini, Le Chat — keep learning from free-tier feedback: ratings, regenerations, and the conversations themselves. That loop is an injection channel. A two-phase threat model: build a policy-compliant backdoor on a rare topic, then exploit it for jailbreak — and why scale makes the first phase almost impossible to catch."
 ShowToc: true
 TocOpen: false
