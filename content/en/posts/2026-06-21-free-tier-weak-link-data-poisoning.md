@@ -2,7 +2,7 @@
 title: "Poisoning the Well: The Free Tier as AI's Weakest Link"
 date: 2026-06-21
 lastmod: 2026-06-21
-draft: true
+draft: false
 tags: ["data-poisoning", "backdoor", "training-time", "supply-chain", "governance", "llm-security"]
 categories: ["Threat Models", "Supply Chain"]
 summary: "A handful of documents — about 250, no matter how big the model — is enough to hide a backdoor in a public AI. The cheapest way into the training pipeline is the free account. Here is why that combination turns a niche attack into a systemic one, explained from scratch."
