@@ -5,6 +5,7 @@ lastmod: 2026-06-22
 draft: false
 tags: ["data-poisoning", "backdoor", "rlhf", "entrainement-continu", "supply-chain", "securite-llm"]
 categories: ["Threat Models", "Supply Chain"]
+theme: "poisoning"
 summary: "Les assistants commerciaux — Claude, ChatGPT, Gemini, Le Chat — continuent d'apprendre à partir du feedback du tier gratuit : notes, régénérations, et les conversations elles-mêmes. Cette boucle est un canal d'injection. Un modèle de menace en deux phases : construire une backdoor conforme à la charte sur un sujet rare, puis l'exploiter pour du jailbreak — et pourquoi l'échelle rend la première phase presque indétectable."
 ShowToc: true
 TocOpen: false
