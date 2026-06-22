@@ -5,6 +5,7 @@ lastmod: 2026-06-12
 draft: false
 tags: ["llm-security", "ai-warfare", "red-team", "blue-team", "lock-monotone", "jailbreak", "prompt-injection"]
 categories: ["Strategy"]
+theme: "fundamentals"
 summary: "Strategic essay. Cyber conflict is now machine-versus-machine, at a tempo that excludes the human operator. Attack holds the advantage — by architecture, not by accident: defending one LLM with another reproduces the very flaw. The way out is to move the decision out of the model, into a deterministic layer."
 ShowToc: true
 TocOpen: false

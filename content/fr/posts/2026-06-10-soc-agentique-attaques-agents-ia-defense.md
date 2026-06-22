@@ -5,6 +5,7 @@ lastmod: 2026-06-10
 draft: false
 tags: ["soc", "ia-agentique", "secops", "agent-defensif", "owasp-asi", "injection-de-prompt", "mttr"]
 categories: ["Analyse", "Sécurité agentique"]
+theme: "agents"
 summary: "Deux mouvements liés : le SOC bascule d'un modèle humain artisanal vers un modèle agentique automatisé — et ces mêmes agents défensifs deviennent une nouvelle surface d'attaque. La défense qu'on déploie est aussi la brèche qu'on ouvre."
 ShowToc: true
 TocOpen: false

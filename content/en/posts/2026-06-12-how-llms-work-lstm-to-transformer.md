@@ -5,6 +5,7 @@ lastmod: 2026-06-12
 draft: false
 tags: ["llm", "transformer", "lstm", "cnn", "attention", "fundamentals"]
 categories: ["Fundamentals"]
+theme: "fundamentals"
 summary: "Three interactive diagrams to see, step by step, how a sentence flows through a recurrent network (LSTM), a convolutional network (CNN), and finally a Transformer — the architecture every modern LLM is built on. Plus why the mechanics matter for security."
 ShowToc: true
 TocOpen: false
