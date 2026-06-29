@@ -1,7 +1,7 @@
 ---
 title: "Quand les gardiens sont eux-mêmes des agents : la corruption récursive des systèmes de contrôle"
-date: 2026-06-30
-lastmod: 2026-06-30
+date: 2026-06-29
+lastmod: 2026-06-29
 draft: false
 tags: ["securite-agentique", "agents-autonomes", "injection-de-prompt", "siem", "ingenierie-sociale", "zero-trust", "decideurs"]
 categories: ["Vulgarisation"]
