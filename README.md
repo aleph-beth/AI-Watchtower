@@ -2,7 +2,7 @@
 
 AI security research blog: prompt injection, MCP vulnerabilities, agent threat models, and hardening playbooks for LLM-based systems.
 
-Bilingual (FR / EN), built with [Hugo](https://gohugo.io/) and the [PaperMod](https://github.com/adityatelange/hugo-PaperMod) theme. Deployed to GitHub Pages via GitHub Actions on every push to `main`.
+Bilingual (FR / EN), built with [Hugo](https://gohugo.io/) and the [PaperMod](https://github.com/adityatelange/hugo-PaperMod) theme, with a custom homepage and the in-house "AlephBeth" styling. Deployed to GitHub Pages via GitHub Actions on every push to `main`.
 
 🌐 https://aleph-beth.github.io/AI-Watchtower/
 
@@ -10,33 +10,46 @@ Bilingual (FR / EN), built with [Hugo](https://gohugo.io/) and the [PaperMod](ht
 
 ```
 .
-├── hugo.toml                       # Hugo configuration (multilingual FR/EN)
+├── hugo.toml                       # Hugo configuration (multilingual FR/EN, menus, params)
 ├── archetypes/default.md           # Frontmatter template for new posts
 ├── content/
-│   ├── fr/
-│   │   ├── _index.md               # FR homepage
-│   │   ├── posts/                  # FR articles
-│   │   └── search.md
-│   └── en/
-│       ├── _index.md               # EN homepage
-│       ├── posts/                  # EN articles
-│       └── search.md
+│   ├── fr/                         # French site (homepage, posts/, search)
+│   └── en/                         # English site (homepage, posts/, search)
+├── layouts/
+│   ├── index.html                  # Custom homepage: "Latest" strip + theme sections
+│   ├── partials/                   # Header (AlephBeth wordmark) + head/footer extensions
+│   └── shortcodes/                 # checklist, details, stat, widget
+├── assets/
+│   ├── css/extended/               # AlephBeth brand styling (alephbeth.css) + interactive.css
+│   └── js/interactive.js
+├── static/
+│   ├── favicon.svg
+│   └── widgets/                    # Standalone HTML teaching widgets (embedded via {{< widget >}})
 ├── themes/PaperMod/                # Theme (git submodule)
 └── .github/workflows/hugo.yml      # GitHub Pages deploy workflow
 ```
 
 ## Add a new bilingual article
 
+Scaffold one file per language (keep the date and slug in sync):
+
 ```bash
 hugo new content/fr/posts/YYYY-MM-DD-mon-article.md
 hugo new content/en/posts/YYYY-MM-DD-my-article.md
 ```
 
-In each frontmatter, set the **same** `translationKey` to link the language pair (the language switcher uses it).
+Then set the frontmatter conventions the site relies on:
+
+- **`translationKey`** — the **same** value in both files, to link the language pair (the language switcher uses it).
+- **`theme`** — one of `fundamentals`, `agents`, `poisoning`, `hardening`. This drives which section the post appears under on the homepage (each theme has its own brand color). Anything else lands in an "Other" section.
+- **`categories`** — a single type label, **mirrored** across languages: `Fondamentaux`/`Fundamentals`, `Vulgarisation`/`Explainer`, `Analyse`/`Analysis`, `Durcissement`/`Hardening`, `Stratégie`/`Strategy`.
+- **`summary`** — a one-to-two sentence summary; it is shown on the homepage cards.
+
+The homepage (`layouts/index.html`) lists the most recent posts in a "Latest" strip, then groups the rest by `theme`.
 
 ## Local preview (optional)
 
-If you have Hugo (extended) installed locally:
+The PaperMod theme is a git submodule, so it must be present before the site can build — otherwise Hugo produces **empty pages** (see [Clone with submodules](#clone-with-submodules)). With Hugo (extended) installed:
 
 ```bash
 hugo server --buildDrafts
@@ -50,7 +63,7 @@ Then open http://localhost:1313/.
 git clone --recurse-submodules https://github.com/aleph-beth/AI-Watchtower.git
 ```
 
-If you cloned without `--recurse-submodules`:
+If you cloned without `--recurse-submodules` (or you are working in a fresh git worktree):
 
 ```bash
 git submodule update --init --recursive
@@ -58,7 +71,7 @@ git submodule update --init --recursive
 
 ## Enable GitHub Pages
 
-In GitHub → Settings → Pages → **Source: GitHub Actions**. The workflow at `.github/workflows/hugo.yml` does the rest.
+In GitHub → Settings → Pages → **Source: GitHub Actions**. The workflow at `.github/workflows/hugo.yml` checks out submodules recursively, builds with Hugo extended, and publishes the result.
 
 ## License
 
