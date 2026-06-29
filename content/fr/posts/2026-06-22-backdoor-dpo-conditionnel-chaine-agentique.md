@@ -4,7 +4,7 @@ date: 2026-06-21
 lastmod: 2026-06-21
 draft: false
 tags: ["data-poisoning", "backdoor", "dpo", "rlhf", "agent", "securite-llm"]
-categories: ["Threat Models", "Agents"]
+categories: ["Analyse"]
 theme: "poisoning"
 summary: "Un compagnon plus technique de l'article sur le feedback du tier gratuit. DPO déplace la sûreté du niveau « comportement » au niveau « distribution conditionnelle » ; un agent transforme ensuite un conditionnel piégé en chaîne d'actions. Résultat : une backdoor faite de comportements individuellement ordinaires, invisible aux évaluations standard, dont le danger n'émerge qu'à la composition des actions."
 ShowToc: true

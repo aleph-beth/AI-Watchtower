@@ -4,7 +4,7 @@ date: 2026-04-27
 lastmod: 2026-04-27
 draft: false
 tags: ["mcp", "claude-desktop", "hardening", "attack-surface", "hygiene"]
-categories: ["Hardening", "MCP"]
+categories: ["Hardening"]
 theme: "hardening"
 summary: "Targeted attack-surface reduction for Claude Desktop. Simple principle: it's a chat assistant, not a system agent. The list of NOs, the list of OKs, and a 30-minute checklist."
 ShowToc: true

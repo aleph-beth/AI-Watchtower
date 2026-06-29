@@ -4,7 +4,7 @@ date: 2026-06-29
 lastmod: 2026-06-29
 draft: false
 tags: ["agentic-security", "autonomous-agents", "prompt-injection", "jailbreak", "exfiltration", "mcp", "decision-makers"]
-categories: ["Agentic AI", "Explainer"]
+categories: ["Explainer"]
 theme: "agents"
 summary: "A chatbot writes sentences; an AI agent acts — it reads your email, runs code, calls APIs, spends money. That shift moves the risk: it is no longer about making the AI say something forbidden, but about making it do something dangerous. This article explains, with detailed and accessible examples, how these attacks actually work, why naive guardrails fail, and what a decision-maker must demand before putting an agent into production."
 ShowToc: true

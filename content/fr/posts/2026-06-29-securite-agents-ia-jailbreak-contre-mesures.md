@@ -4,7 +4,7 @@ date: 2026-06-29
 lastmod: 2026-06-29
 draft: false
 tags: ["securite-agentique", "agents-autonomes", "injection-de-prompt", "jailbreak", "exfiltration", "mcp", "decideurs"]
-categories: ["Sécurité agentique", "Vulgarisation"]
+categories: ["Vulgarisation"]
 theme: "agents"
 summary: "Un chatbot écrit des phrases ; un agent IA agit — il lit vos e-mails, exécute du code, appelle des API, dépense de l'argent. Ce changement déplace le risque : il ne s'agit plus de faire dire à l'IA quelque chose d'interdit, mais de lui faire faire quelque chose de dangereux. Cet article explique, avec des exemples détaillés et accessibles, comment ces attaques fonctionnent réellement, pourquoi les garde-fous naïfs échouent, et ce qu'un décideur doit exiger avant de mettre un agent en production."
 ShowToc: true

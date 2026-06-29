@@ -4,7 +4,7 @@ date: 2026-06-30
 lastmod: 2026-06-30
 draft: false
 tags: ["agentic-security", "autonomous-agents", "prompt-injection", "siem", "social-engineering", "zero-trust", "decision-makers"]
-categories: ["Agentic AI", "Explainer"]
+categories: ["Explainer"]
 theme: "agents"
 summary: "Classic security tools hunt for dangerous words: 'hack', 'bomb', 'urgent'. But you don't subvert an AI agent with suspicious vocabulary — you subvert it with the ordinary language of the business: a role, a process, a plausible emergency. And when the agent that monitors, the SIEM that correlates and the auditor that checks are themselves AI agents, the attacker no longer has to defeat a system: it corrupts them in a chain. This article explains that recursive-corruption mechanism and what a decision-maker must demand to break it."
 ShowToc: true

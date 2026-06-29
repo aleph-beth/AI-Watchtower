@@ -4,7 +4,7 @@ date: 2026-06-30
 lastmod: 2026-06-30
 draft: false
 tags: ["securite-agentique", "agents-autonomes", "injection-de-prompt", "siem", "ingenierie-sociale", "zero-trust", "decideurs"]
-categories: ["Sécurité agentique", "Vulgarisation"]
+categories: ["Vulgarisation"]
 theme: "agents"
 summary: "Les outils de sécurité classiques cherchent des mots dangereux : « pirater », « bombe », « urgent ». Mais on ne détourne pas un agent IA avec un vocabulaire suspect — on le détourne avec le langage normal de l'entreprise : un rôle, un processus, une urgence plausible. Et quand l'agent qui surveille, le SIEM qui corrèle et l'auditeur qui contrôle sont eux aussi des agents IA, l'attaquant n'a plus à tromper un système : il les corrompt en chaîne. Cet article explique ce mécanisme de corruption récursive et ce qu'un décideur doit exiger pour le briser."
 ShowToc: true
