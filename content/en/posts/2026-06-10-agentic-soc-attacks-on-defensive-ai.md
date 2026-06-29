@@ -4,7 +4,7 @@ date: 2026-06-10
 lastmod: 2026-06-10
 draft: false
 tags: ["soc", "agentic-ai", "secops", "defensive-agent", "owasp-asi", "prompt-injection", "mttr"]
-categories: ["Analysis", "Agentic Security"]
+categories: ["Analysis"]
 theme: "agents"
 summary: "Two linked shifts: the SOC moves from a human craft model to an automated agentic one — and those same defensive agents become a new attack surface. The defense you deploy is also the breach you open."
 ShowToc: true

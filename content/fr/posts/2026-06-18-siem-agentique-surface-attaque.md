@@ -4,7 +4,7 @@ date: 2026-06-18
 lastmod: 2026-06-18
 draft: false
 tags: ["ia", "cybersecurite", "siem", "agentic-ai", "llm", "poisoning", "model-security", "lock-monotone", "tgmc"]
-categories: ["Agentic AI", "Threat Model"]
+categories: ["Analyse"]
 theme: "agents"
 summary: "Les SOC évoluent vers des architectures agentiques où plusieurs IA assurent triage, investigation, corrélation et réponse. Le système de décision devient alors lui-même une cible. Nous défendons la monotonie des capacités (Lock-Monotone/TGMC) comme invariant architectural pour limiter une compromission du raisonnement."
 ShowToc: true

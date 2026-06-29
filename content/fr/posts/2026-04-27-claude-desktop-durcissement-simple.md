@@ -4,7 +4,7 @@ date: 2026-04-27
 lastmod: 2026-04-27
 draft: false
 tags: ["mcp", "claude-desktop", "hardening", "surface-attaque", "hygiene"]
-categories: ["Hardening", "MCP"]
+categories: ["Durcissement"]
 theme: "hardening"
 summary: "Réduction de surface ciblée sur Claude Desktop. Principe simple : c'est un assistant conversationnel, pas un agent système. Liste des « non », liste des « oui », checklist 30 minutes."
 ShowToc: true

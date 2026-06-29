@@ -1,56 +1,101 @@
 {{- define "main" }}
 {{- $fr := eq site.Language.Lang "fr" }}
+{{- $colors := dict "fundamentals" "#5b7384" "agents" "#f2a05a" "poisoning" "#d6453a" "hardening" "#15264d" }}
+{{- $labels := dict
+  "fundamentals" (cond $fr "Fondamentaux" "Fundamentals")
+  "agents" "Agents"
+  "poisoning" (cond $fr "Empoisonnement" "Poisoning & Supply Chain")
+  "hardening" (cond $fr "Durcissement" "Hardening") }}
 <style>
-.wt-hero{margin:.4rem 0 2.2rem}
+.wt-hero{margin:.4rem 0 2rem}
 .wt-hero h1{margin:0 0 .35rem;font-family:"Instrument Serif",Georgia,serif;font-weight:600;font-size:2.3rem;line-height:1.1}
-.wt-hero p{margin:0;opacity:.72}
-.wt-theme{margin:2.2rem 0}
-.wt-theme-h{display:flex;align-items:center;gap:.55rem;font-size:1.15rem;margin:0 0 .95rem;font-weight:600}
-.wt-dot{width:.72rem;height:.72rem;border-radius:50%;display:inline-block;flex:0 0 auto}
-.wt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
-.wt-tile{aspect-ratio:1/1;display:flex;flex-direction:column;justify-content:space-between;padding:16px;border-radius:12px;background:var(--bg);color:var(--fg);text-decoration:none;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease}
-.wt-tile:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.2)}
-.wt-eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;opacity:.85}
-.wt-foot{display:block}
-.wt-title{display:block;font-family:"Instrument Serif",Georgia,serif;font-size:1.3rem;line-height:1.16;font-weight:600}
-.wt-meta{display:block;font-size:.74rem;opacity:.82;margin-top:.45rem}
-@media(max-width:420px){.wt-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+.wt-hero p{margin:0;opacity:.72;max-width:42rem}
+
+.wt-sec{margin:2.1rem 0}
+.wt-sec-h{display:flex;align-items:center;gap:.55rem;font-size:1.12rem;margin:0 0 1rem;font-weight:600}
+.wt-dot{width:.7rem;height:.7rem;border-radius:50%;display:inline-block;flex:0 0 auto}
+
+.wt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+
+.wt-card{display:flex;flex-direction:column;gap:.45rem;padding:16px 18px;border-radius:12px;
+  background:color-mix(in srgb,var(--tile) 12%,var(--entry));
+  border:1px solid var(--border);border-left:3px solid var(--tile);
+  color:var(--content);text-decoration:none;
+  transition:transform .15s ease,box-shadow .15s ease}
+.wt-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.12)}
+.wt-eyebrow{display:flex;align-items:center;gap:.42rem;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;opacity:.85;font-weight:600}
+.wt-eyebrow .wt-dot{width:.55rem;height:.55rem}
+.wt-title{font-family:"Instrument Serif",Georgia,serif;font-size:1.27rem;line-height:1.18;font-weight:600;color:var(--primary)}
+.wt-card:hover .wt-title{color:var(--ab-accent)}
+.wt-sum{font-size:.83rem;line-height:1.45;opacity:.8;margin:0}
+.wt-meta{font-size:.72rem;opacity:.7;margin-top:auto;padding-top:.35rem}
+
+@media(max-width:520px){.wt-grid{grid-template-columns:1fr}}
 </style>
+
 <div class="wt-hero">
 <h1>{{ site.Title }}</h1>
 <p>{{ cond $fr "Veille critique sur la sécurité des systèmes d'IA — modèles de menace, empoisonnement, agents, durcissement." "Critical watch on AI security — threat models, poisoning, agents, hardening." }}</p>
 </div>
+
+{{- /* ── Derniers articles : 4 plus récents, tous thèmes confondus ─────────── */}}
+{{- $latest := first 4 (where site.RegularPages "Section" "posts").ByDate.Reverse }}
+{{- with $latest }}
+<section class="wt-sec wt-latest">
+<h2 class="wt-sec-h"><span class="wt-dot" style="background:var(--ab-accent)"></span>{{ cond $fr "Derniers articles" "Latest" }}</h2>
+<div class="wt-grid">
+{{- range . }}
+{{- $c := index $colors .Params.theme }}{{ if not $c }}{{ $c = "#5b7384" }}{{ end }}
+{{- $l := index $labels .Params.theme }}{{ if not $l }}{{ $l = (cond $fr "Autres" "Other") }}{{ end }}
+<a class="wt-card" style="--tile:{{ $c }}" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">
+<span class="wt-eyebrow"><span class="wt-dot" style="background:{{ $c }}"></span>{{ $l }}</span>
+<span class="wt-title">{{ .Title }}</span>
+{{- with .Summary }}<p class="wt-sum">{{ . | plainify | truncate 150 }}</p>{{ end }}
+<span class="wt-meta">{{ time.Format ":date_medium" .Date }} · {{ .ReadingTime }} min</span>
+</a>
+{{- end }}
+</div>
+</section>
+{{- end }}
+
+{{- /* ── Par thème ─────────────────────────────────────────────────────────── */}}
 {{- $themes := slice
-  (dict "key" "fundamentals" "label" (cond $fr "Fondamentaux" "Fundamentals") "bg" "#5b7384" "fg" "#ffffff")
-  (dict "key" "agents" "label" "Agents" "bg" "#f2a05a" "fg" "#15264d")
-  (dict "key" "poisoning" "label" (cond $fr "Empoisonnement" "Poisoning & Supply Chain") "bg" "#d6453a" "fg" "#ffffff")
-  (dict "key" "hardening" "label" (cond $fr "Durcissement" "Hardening") "bg" "#15264d" "fg" "#ffffff") }}
+  (dict "key" "fundamentals" "label" (cond $fr "Fondamentaux" "Fundamentals") "color" "#5b7384")
+  (dict "key" "agents" "label" "Agents" "color" "#f2a05a")
+  (dict "key" "poisoning" "label" (cond $fr "Empoisonnement" "Poisoning & Supply Chain") "color" "#d6453a")
+  (dict "key" "hardening" "label" (cond $fr "Durcissement" "Hardening") "color" "#15264d") }}
 {{- range $t := $themes }}
 {{- $posts := where site.RegularPages "Params.theme" $t.key }}
 {{- with $posts }}
-<section class="wt-theme">
-<h2 class="wt-theme-h"><span class="wt-dot" style="background:{{ $t.bg }}"></span>{{ $t.label }}</h2>
+<section class="wt-sec">
+<h2 class="wt-sec-h"><span class="wt-dot" style="background:{{ $t.color }}"></span>{{ $t.label }}</h2>
 <div class="wt-grid">
 {{- range .ByDate.Reverse }}
-<a class="wt-tile" style="--bg:{{ $t.bg }};--fg:{{ $t.fg }}" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">
+<a class="wt-card" style="--tile:{{ $t.color }}" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">
 {{- with .Params.categories }}<span class="wt-eyebrow">{{ index . 0 }}</span>{{ end }}
-<span class="wt-foot"><span class="wt-title">{{ .Title }}</span><span class="wt-meta">{{ .ReadingTime }} min{{ with .Params.tags }} · {{ index . 0 }}{{ end }}</span></span>
+<span class="wt-title">{{ .Title }}</span>
+{{- with .Summary }}<p class="wt-sum">{{ . | plainify | truncate 140 }}</p>{{ end }}
+<span class="wt-meta">{{ time.Format ":date_medium" .Date }} · {{ .ReadingTime }} min</span>
 </a>
 {{- end }}
 </div>
 </section>
 {{- end }}
 {{- end }}
+
+{{- /* ── Thèmes hors liste connue ──────────────────────────────────────────── */}}
 {{- $known := slice "fundamentals" "agents" "poisoning" "hardening" }}
 {{- $other := where site.RegularPages "Params.theme" "not in" $known }}
 {{- with $other }}
-<section class="wt-theme">
-<h2 class="wt-theme-h"><span class="wt-dot" style="background:#5b7384"></span>{{ cond $fr "Autres" "Other" }}</h2>
+<section class="wt-sec">
+<h2 class="wt-sec-h"><span class="wt-dot" style="background:#5b7384"></span>{{ cond $fr "Autres" "Other" }}</h2>
 <div class="wt-grid">
 {{- range .ByDate.Reverse }}
-<a class="wt-tile" style="--bg:#5b7384;--fg:#ffffff" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">
+<a class="wt-card" style="--tile:#5b7384" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">
 {{- with .Params.categories }}<span class="wt-eyebrow">{{ index . 0 }}</span>{{ end }}
-<span class="wt-foot"><span class="wt-title">{{ .Title }}</span><span class="wt-meta">{{ .ReadingTime }} min{{ with .Params.tags }} · {{ index . 0 }}{{ end }}</span></span>
+<span class="wt-title">{{ .Title }}</span>
+{{- with .Summary }}<p class="wt-sum">{{ . | plainify | truncate 140 }}</p>{{ end }}
+<span class="wt-meta">{{ time.Format ":date_medium" .Date }} · {{ .ReadingTime }} min</span>
 </a>
 {{- end }}
 </div>
