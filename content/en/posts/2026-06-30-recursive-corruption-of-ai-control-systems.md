@@ -1,7 +1,7 @@
 ---
 title: "When the Guards Are Agents Too: The Recursive Corruption of Control Systems"
-date: 2026-06-30
-lastmod: 2026-06-30
+date: 2026-06-29
+lastmod: 2026-06-29
 draft: false
 tags: ["agentic-security", "autonomous-agents", "prompt-injection", "siem", "social-engineering", "zero-trust", "decision-makers"]
 categories: ["Explainer"]
