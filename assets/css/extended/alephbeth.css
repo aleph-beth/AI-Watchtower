@@ -199,3 +199,13 @@ code, pre, kbd, samp,
 ::-webkit-scrollbar-thumb {
     background: var(--ab-fume);
 }
+
+/* GitHub link in header switches */
+.ab-gh {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: .45rem;
+    color: var(--primary);
+}
+.ab-gh:hover { color: var(--ab-accent); }
+.ab-gh svg { height: 18px; width: 18px; display: block; }
