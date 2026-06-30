@@ -105,6 +105,11 @@ Articles ci-dessous.
       name = "Recherche"
       url = "search/"
       weight = 30
+    [[languages.fr.menu.main]]
+      identifier = "contact"
+      name = "Contact"
+      url = "contact/"
+      weight = 40
 
   [languages.en]
     languageName = "English"
@@ -138,4 +143,9 @@ Articles below.
       name = "Search"
       url = "search/"
       weight = 30
+    [[languages.en.menu.main]]
+      identifier = "contact"
+      name = "Contact"
+      url = "contact/"
+      weight = 40
 
