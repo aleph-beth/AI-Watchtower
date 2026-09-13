@@ -22,7 +22,7 @@ Le scénario est le suivant. Un utilisateur demande à son agent de rechercher u
 
 C'est l'injection indirecte : au départ, l'attaquant ne parle pas directement au modèle. Il dépose ses instructions dans un contenu que le modèle viendra chercher lui-même. Mais cette distance ne tient qu'un temps : dès que l'agent est amené à consulter une URL contrôlée par l'attaquant — une URL en lien avec la page piégée — un canal s'ouvre. L'attaquant y **extrait des informations de l'agent** (glissées dans les paramètres de l'URL) et lui **renvoie de nouvelles instructions**. L'injection « déposée d'avance » devient alors un dialogue en direct entre l'attaquant et l'agent (nous y revenons dans la section *« La page n'est pas statique »*).
 
-Nous expliquons ici comment cette attaque se structure par couches, comment elle bascule d'une charge « écrite d'avance » à un **canal de communication en direct avec l'attaquant** — la page devenant l'amorce d'un dialogue d'exfiltration et de commande — et pourquoi la défense la plus immédiate, alerter explicitement le modèle du risque, est un premier rempart réel mais partiel. Disons-le d'emblée, car c'est le cœur de l'argument et sa limite : **alerter le modèle ne lui donne pas la capacité de séparer instruction et donnée qui lui manque. Cela déplace seulement son *a priori* vers la méfiance.** C'est utile, c'est peu coûteux, c'est nécessaire — et ce n'est pas une propriété de sécurité. La sécurité, elle, vient de l'architecture.
+Nous expliquons ici comment cette attaque se structure par couches, comment elle bascule d'une charge « écrite d'avance » à un **canal de communication en direct avec l'attaquant** — la page devenant l'amorce d'un dialogue d'exfiltration et de commande — et pourquoi la défense la plus immédiate, alerter explicitement le modèle du risque, est un premier rempart réel mais partiel. Disons-le d'emblée, car c'est le cœur de l'argument et sa limite : **alerter le modèle ne lui donne pas, de façon garantie, la capacité de séparer instruction et donnée qui lui manque à la racine ; le plus souvent, cela ne fait que déplacer son *a priori* vers la méfiance.** Ce n'est pas vrai dans tous les cas : sur certains modèles récents, et face à des attaques non adaptatives, ce seul déplacement suffit en pratique à refuser de façon assez fiable. Mais on ne peut pas s'y fier comme sur une garantie — un attaquant qui sait l'alerte présente la contourne. C'est utile, c'est peu coûteux, c'est nécessaire — et ce n'est pas, à soi seul, une propriété de sécurité fiable. La sécurité, elle, vient de l'architecture.
 
 ## Le pipeline d'ingestion : où l'attaque prend effet
 
@@ -152,6 +152,8 @@ L'ordre n'est pas arbitraire :
 
 Aucune de ces primitives n'est inédite. Ce qui rend la chaîne singulière, c'est sa **composition** : quelques lignes de langage naturel, chacune visant un étage de défense distinct, dans une page ordinaire que les agents viennent chercher eux-mêmes.
 
+**Ce scénario n'est pas une hypothèse d'école.** Chacun des étages, et leur enchaînement, fonctionne concrètement contre un agent dépourvu des contrôles architecturaux listés en conclusion — isolation du modèle de garde, décodage contraint, autorisation par l'enveloppe, allow-list de sortie, journalisation réseau. Autrement dit : dès que la sécurité est défaillante — dès qu'on s'en remet à la seule vigilance du modèle —, la chaîne est **réelle et reproductible**. Ce qui la neutralise n'est pas une difficulté technique, qui est faible, mais la présence de ces frontières ; là où elles manquent, rien dans le pipeline standard n'arrête l'attaque. La question n'est donc pas « est-ce possible ? » — ça l'est — mais « mon système est-il de ceux où ça fonctionne ? ».
+
 ## La page n'est pas statique : l'attaquant est au bout du fil
 
 Jusqu'ici nous avons décrit la page comme un support passif : elle porte une charge, l'agent la lit, l'exécute. C'est déjà grave. Mais le vrai risque est un cran au-dessus, et il change la nature de la menace.
@@ -238,7 +240,7 @@ L'obfuscation illustre leur complémentarité : elle aide à passer un filtre, m
 ## Ce que cet article ne dit pas
 
 - **Il ne fournit pas de charge prête à l'emploi.** Les étages sont décrits par leur intention, sans formulation exacte ni chaîne assemblée. La classe d'attaque est publiquement documentée (OWASP LLM01:2025 ; Greshake et al., 2023 ; Cohen et al., 2024).
-- **Il ne décrit ni site piégé réel, ni cible spécifique.** Le scénario est générique.
+- **Il ne décrit ni site piégé réel, ni cible spécifique.** Le scénario est générique, non hypothétique : il ne vise personne en particulier, mais il vaut pour toute pile qui délègue au modèle la frontière instruction/donnée.
 - **Il ne prétend pas que l'alerte est suffisante.** Elle est nécessaire, pas suffisante. L'architecture de défense complète est documentée ailleurs (Dual-LLM / CaMeL — Debenedetti et al., 2025 ; décodage contraint ; isolation de quarantaine).
 - **Il ne prétend pas que tous les modèles sont vulnérables au même degré.** Les modèles frontières avec garde-fous de production semblent bloquer plus fiablement lorsqu'ils sont alertés ; l'alerte renforce ce comportement sans le rendre certain.
 
@@ -246,7 +248,7 @@ L'obfuscation illustre leur complémentarité : elle aide à passer un filtre, m
 
 L'injection de prompt indirecte par contenu web n'est pas une vulnérabilité exotique. C'est la conséquence directe d'une propriété fondamentale des modèles instruction-tunés : ils ne distinguent pas, par défaut, l'instruction de la donnée. Une page indexée, accessible à tous les agents, peut porter une charge en quatre étages — évasion, persistance, exfiltration, dissimulation — en langage naturel, sans code.
 
-La défense la plus immédiate n'est pas un filtre : c'est une consigne qui alerte le modèle et lui demande d'évaluer le contenu externe avant d'agir. Mais il faut nommer sa limite avec la même clarté que sa vertu. L'alerte ne corrige pas la faille racine — elle ne rend pas au modèle la séparation instruction/donnée qui lui manque. Elle déplace un *a priori*. C'est beaucoup, parce que le défaut n'est pas l'absence de compétence de détection mais l'absence de son activation ; et c'est peu, parce qu'un *a priori* déplacé reste un *a priori*, franchissable par qui le connaît.
+La défense la plus immédiate n'est pas un filtre : c'est une consigne qui alerte le modèle et lui demande d'évaluer le contenu externe avant d'agir. Mais il faut nommer sa limite avec la même clarté que sa vertu. L'alerte ne corrige pas la faille racine — elle ne rend pas au modèle, de façon garantie, la séparation instruction/donnée qui lui manque. Selon le modèle et l'attaque, elle peut suffire en pratique, ou seulement déplacer un *a priori*. C'est beaucoup, parce que le défaut n'est souvent pas l'absence de compétence de détection mais l'absence de son activation ; et c'est peu, parce qu'un *a priori* déplacé reste un *a priori*, franchissable par qui le connaît.
 
 C'est pourquoi l'alerte est une **première ligne**, jamais la ligne. Les suivantes sont architecturales, et se comprennent en une phrase chacune :
 
