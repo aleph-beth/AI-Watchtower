@@ -1,0 +1,20 @@
+{{- /* AlephBeth — render ```mermaid fenced blocks as diagrams.
+       The Mermaid runtime is emitted once per page (Store-guarded) here, rather than
+       in the footer, because PaperMod renders footer.html via partialCached with a
+       (.Layout .Kind) key — a page-scoped conditional there is unreliable. */ -}}
+<pre class="mermaid" aria-label="diagram">
+{{- .Inner | htmlEscape | safeHTML }}
+</pre>
+{{- if not (.Page.Store.Get "mermaidLoaded") }}
+{{- .Page.Store.Set "mermaidLoaded" true }}
+<script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+const isDark = () => {
+  const c = document.body.className || "";
+  if (c.includes("dark")) return true;
+  if (c.includes("light")) return false;
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+};
+mermaid.initialize({ startOnLoad: true, securityLevel: "strict", theme: isDark() ? "dark" : "neutral", fontFamily: "Geist, system-ui, sans-serif" });
+</script>
+{{- end }}
