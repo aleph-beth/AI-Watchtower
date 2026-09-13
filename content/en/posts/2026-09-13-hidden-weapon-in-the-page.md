@@ -82,6 +82,24 @@ flowchart LR
 
 This is what turns a one-off injection into a **worm**. It is not speculative: the *Morris II* work (Cohen, Bitton & Nassi, 2024) demonstrated zero-click self-replicating worms targeting GenAI applications and RAG pipelines. The payload is not consumed on use: it copies itself. Every agent that processes the output becomes a vector to the next.
 
+#### Durable persistence: poisoning memory or the RAG
+
+Re-emission into the output is the **volatile** form of persistence: the payload survives only as long as some output keeps copying it. There is a **durable** form, far closer to the meaning the word has in a classic intrusion — surviving beyond the current session. It does not ask the agent to reproduce the payload every turn, but to **write it once into a store it will read again later**: its long-term memory, or the vector index of a RAG system.
+
+```mermaid
+flowchart LR
+    P["Trapped page<br/>(session 1)"] --> A1["Agent"]
+    A1 -->|"writes the payload"| M["Long-term memory<br/>/ RAG index"]
+    M -.->|"days later,<br/>unrelated query"| A2["Agent<br/>(session 2)"]
+    A2 --> ACT["The payload fires<br/>outside any trapped context"]
+```
+
+**Memory poisoning.** An agent with persistent memory records facts, preferences, "lessons" drawn from its interactions. If the trapped page leads it to memorize a directive — presented as a user preference or a business rule — that directive will resurface in a later conversation turn, triggered by a perfectly legitimate query, with no trapped page in sight. The payload has detached from its original vector. Recent work (*MINJA*, Dong et al., 2025) shows that a plain dialogue is enough to inject malicious records into an agent's memory bank, with no privileged access to the storage.
+
+**RAG poisoning.** The same principle holds for a knowledge base queried by retrieval. It is enough for a document carrying the payload to be indexed — a harvested web page, a ticket, a PDF dropped into a share — for it to resurface later in response to a semantically close query, and re-inject its instructions into the context at generation time. The attacker does not choose *when* the payload fires; they place it where retrieval will eventually bring it back. Attacks such as *PoisonedRAG* (Zou et al., 2024) and *AgentPoison* (Chen et al., 2024) have shown that a very small number of poisoned documents is enough to reliably steer a RAG pipeline's answers or an agent's decisions.
+
+The difference from simple re-emission is decisive for the defender. A payload copied from output to output stays **traceable**: it appears at every turn. A payload lodged in memory or the index becomes **dormant** — it expresses itself only on retrieval, potentially days later, for another user, on a query unrelated to the original page. The causal link between the initial ingestion and the final action is broken, which makes investigation that much harder. It is also why any store fed back by the model — memory, RAG index, summary base — must be treated as a **trust boundary** in its own right, not as a mere cache.
+
 ### Part 3 — Reconnaissance and outbound emission: the payload
 
 **Target:** the tool layer. This is the chain's payload.
@@ -254,5 +272,8 @@ Without the warning, these lines protect a model that cooperates with its attack
 - OWASP, *Top 10 for LLM Applications — LLM01:2025 Prompt Injection.*
 - K. Greshake et al., *Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection*, 2023.
 - S. Cohen, R. Bitton, B. Nassi, *Here Comes The AI Worm (Morris II)*, arXiv:2403.02817, 2024.
+- W. Zou et al., *PoisonedRAG: Knowledge Corruption Attacks to Retrieval-Augmented Generation of Large Language Models*, arXiv:2402.07867, 2024.
+- Z. Chen et al., *AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases*, arXiv:2407.12784, 2024.
+- S. Dong et al., *A Practical Memory Injection Attack against LLM Agents (MINJA)*, arXiv:2503.03704, 2025.
 - E. Debenedetti et al., *Defeating Prompt Injections by Design (CaMeL)*, arXiv:2503.18813, 2025.
 - K. Hines et al. (Microsoft), *Defending Against Indirect Prompt Injection Attacks With Spotlighting*, arXiv:2403.14720, 2024.

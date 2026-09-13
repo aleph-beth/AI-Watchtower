@@ -82,6 +82,24 @@ flowchart LR
 
 C'est ce qui transforme une injection ponctuelle en **ver**. Ce n'est pas spéculatif : le travail *Morris II* (Cohen, Bitton & Nassi, 2024) a démontré des vers zéro-clic auto-répliquants ciblant des applications GenAI et des pipelines RAG. La charge n'est pas consommée à l'usage : elle se recopie. Chaque agent qui traite la sortie devient un vecteur vers le suivant.
 
+#### La persistance durable : empoisonner la mémoire ou le RAG
+
+La réémission dans la sortie est la forme **volatile** de la persistance : la charge ne survit qu'aussi longtemps qu'une sortie continue de la recopier. Il en existe une forme **durable**, bien plus proche du sens que ce mot a dans une intrusion classique — survivre au-delà de la session en cours. Elle ne demande pas à l'agent de restituer la charge à chaque tour, mais de l'**inscrire une fois dans un magasin qu'il relira plus tard** : sa mémoire à long terme, ou l'index vectoriel d'un système RAG.
+
+```mermaid
+flowchart LR
+    P["Page piégée<br/>(session 1)"] --> A1["Agent"]
+    A1 -->|"écrit la charge"| M["Mémoire long terme<br/>/ index RAG"]
+    M -.->|"jours plus tard,<br/>autre requête"| A2["Agent<br/>(session 2)"]
+    A2 --> ACT["La charge se déclenche<br/>hors de tout contexte piégé"]
+```
+
+**Empoisonnement de la mémoire.** Un agent doté d'une mémoire persistante y consigne des faits, des préférences, des « leçons » tirées de ses interactions. Si la page piégée l'amène à mémoriser une consigne — présentée comme une préférence de l'utilisateur ou une règle métier —, cette consigne réapparaîtra lors d'un tour de conversation ultérieur, déclenché par une requête parfaitement légitime, sans aucune page piégée en vue. La charge s'est détachée de son vecteur d'origine. Des travaux récents (*MINJA*, Dong et al., 2025) montrent qu'un simple dialogue suffit à injecter des enregistrements malveillants dans la banque mémoire d'un agent, sans aucun accès privilégié au stockage.
+
+**Empoisonnement du RAG.** Le même principe vaut pour une base de connaissances interrogée par récupération. Il suffit qu'un document porteur de la charge soit indexé — page web moissonnée, ticket, PDF déposé dans un partage — pour qu'il ressorte plus tard en réponse à une requête sémantiquement proche, et réinjecte ses instructions dans le contexte au moment de la génération. L'attaquant ne choisit pas *quand* la charge se déclenchera ; il la place là où la récupération finira par la ramener. Des attaques comme *PoisonedRAG* (Zou et al., 2024) et *AgentPoison* (Chen et al., 2024) ont démontré qu'un très petit nombre de documents empoisonnés suffit à orienter de façon fiable les réponses d'un pipeline RAG ou les décisions d'un agent.
+
+La différence avec la simple réémission est décisive pour le défenseur. Une charge recopiée de sortie en sortie reste **traçable** : elle apparaît à chaque tour. Une charge logée dans la mémoire ou l'index devient **dormante** — elle ne s'exprime qu'à la récupération, potentiellement des jours plus tard, pour un autre utilisateur, sur une requête sans rapport avec la page d'origine. Le lien de causalité entre l'ingestion initiale et l'action finale est rompu, ce qui rend l'investigation d'autant plus difficile. C'est aussi pourquoi tout magasin réalimenté par le modèle — mémoire, index RAG, base de résumés — doit être traité comme une **frontière de confiance** à part entière, et non comme un simple cache.
+
 ### Partie 3 — Reconnaissance et émission sortante : la charge utile
 
 **Cible :** la couche d'outils. C'est la charge utile de la chaîne.
@@ -254,5 +272,8 @@ Sans l'alerte, ces lignes protègent un modèle qui coopère avec son attaquant.
 - OWASP, *Top 10 for LLM Applications — LLM01:2025 Prompt Injection.*
 - K. Greshake et al., *Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection*, 2023.
 - S. Cohen, R. Bitton, B. Nassi, *Here Comes The AI Worm (Morris II)*, arXiv:2403.02817, 2024.
+- W. Zou et al., *PoisonedRAG: Knowledge Corruption Attacks to Retrieval-Augmented Generation of Large Language Models*, arXiv:2402.07867, 2024.
+- Z. Chen et al., *AgentPoison: Red-teaming LLM Agents via Poisoning Memory or Knowledge Bases*, arXiv:2407.12784, 2024.
+- S. Dong et al., *A Practical Memory Injection Attack against LLM Agents (MINJA)*, arXiv:2503.03704, 2025.
 - E. Debenedetti et al., *Defeating Prompt Injections by Design (CaMeL)*, arXiv:2503.18813, 2025.
 - K. Hines et al. (Microsoft), *Defending Against Indirect Prompt Injection Attacks With Spotlighting*, arXiv:2403.14720, 2024.
