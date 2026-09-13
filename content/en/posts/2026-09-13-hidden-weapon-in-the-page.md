@@ -22,7 +22,7 @@ The scenario is this. A user asks their agent to research a topic. The agent que
 
 That is indirect injection: at the outset, the attacker does not speak to the model directly. They deposit their instructions in content the model will fetch on its own. But that distance holds only for a moment: as soon as the agent is led to visit a URL the attacker controls — a URL linked from the booby-trapped page — a channel opens. There the attacker **extracts information from the agent** (slipped into the URL's parameters) and **sends back fresh instructions**. The "planted-in-advance" injection then becomes a live dialogue between the attacker and the agent (we return to this in the section *"The page is not static"*).
 
-Here we explain how this attack is structured in layers, how it shifts from a "written-in-advance" payload to a **live communication channel with the attacker** — the page becoming the opening move of an exfiltration-and-command dialogue — and why the most immediate defense, explicitly warning the model of the risk, is a real but partial rampart. Let us say it up front, because it is the heart of the argument and its limit: **warning the model does not give it the instruction/data separation it lacks. It merely shifts its *prior* toward suspicion.** That is useful, it is cheap, it is necessary — and it is not a security property. Security comes from architecture.
+Here we explain how this attack is structured in layers, how it shifts from a "written-in-advance" payload to a **live communication channel with the attacker** — the page becoming the opening move of an exfiltration-and-command dialogue — and why the most immediate defense, explicitly warning the model of the risk, is a real but partial rampart. Let us say it up front, because it is the heart of the argument and its limit: **warning the model does not, in a guaranteed way, give it the instruction/data separation it lacks at the root; most of the time, it only shifts its *prior* toward suspicion.** This does not hold in every case: on some recent models, and against non-adaptive attacks, that shift alone is enough in practice to refuse fairly reliably. But it cannot be relied on as a guarantee — an attacker who knows the warning is there works around it. It is useful, it is cheap, it is necessary — and on its own it is not a reliable security property. Security comes from architecture.
 
 ## The ingestion pipeline: where the attack takes effect
 
@@ -152,6 +152,8 @@ The order is not arbitrary:
 
 None of these primitives is new. What makes the chain singular is its **composition**: a few lines of natural language, each targeting a distinct defensive stage, in an ordinary page that agents fetch on their own.
 
+**This scenario is not a classroom hypothetical.** Each stage, and their chaining, works concretely against an agent that lacks the architectural controls listed in the conclusion — guard-model isolation, constrained decoding, authorization by the envelope, an egress allow-list, socket-level logging. In other words: as soon as security is deficient — as soon as one relies on the model's vigilance alone — the chain is **real and reproducible**. What neutralizes it is not technical difficulty, which is low, but the presence of those boundaries; where they are missing, nothing in the standard pipeline stops the attack. The question is therefore not "is this possible?" — it is — but "is my system one of those where it works?"
+
 ## The page is not static: the attacker is on the other end
 
 So far we have described the page as a passive medium: it carries a payload, the agent reads it, executes it. That is already serious. But the real risk is a notch higher, and it changes the nature of the threat.
@@ -238,7 +240,7 @@ Obfuscation illustrates their complementarity: it helps get past a filter, but i
 ## What this article does not say
 
 - **It does not provide a ready-to-use payload.** The stages are described by their intent, without exact wording or an assembled chain. The attack class is publicly documented (OWASP LLM01:2025; Greshake et al., 2023; Cohen et al., 2024).
-- **It describes neither a real trapped site nor a specific target.** The scenario is generic.
+- **It describes neither a real trapped site nor a specific target.** The scenario is generic, not hypothetical: it targets no one in particular, but it holds for any stack that delegates the instruction/data boundary to the model.
 - **It does not claim the warning is sufficient.** It is necessary, not sufficient. The full defensive architecture is documented elsewhere (Dual-LLM / CaMeL — Debenedetti et al., 2025; constrained decoding; quarantine isolation).
 - **It does not claim all models are vulnerable to the same degree.** Frontier models with production guardrails appear to block more reliably when warned; the warning strengthens that behavior without making it certain.
 
@@ -246,7 +248,7 @@ Obfuscation illustrates their complementarity: it helps get past a filter, but i
 
 Indirect prompt injection via web content is not an exotic vulnerability. It is the direct consequence of a fundamental property of instruction-tuned models: they do not, by default, tell instruction from data. An indexed page, reachable by any agent, can carry a four-stage payload — evasion, persistence, exfiltration, concealment — in natural language, without code.
 
-The most immediate defense is not a filter: it is a directive that warns the model and asks it to evaluate external content before acting. But its limit must be named with the same clarity as its virtue. The warning does not fix the root flaw — it does not restore to the model the instruction/data separation it lacks. It shifts a *prior*. That is a lot, because the defect is not the absence of detection skill but the absence of its activation; and it is little, because a shifted *prior* remains a *prior*, crossable by anyone who knows it.
+The most immediate defense is not a filter: it is a directive that warns the model and asks it to evaluate external content before acting. But its limit must be named with the same clarity as its virtue. The warning does not fix the root flaw — it does not, in a guaranteed way, restore to the model the instruction/data separation it lacks. Depending on the model and the attack, it may suffice in practice, or only shift a *prior*. That is a lot, because the defect is often not the absence of detection skill but the absence of its activation; and it is little, because a shifted *prior* remains a *prior*, crossable by anyone who knows it.
 
 This is why the warning is a **first line**, never the line. The next ones are architectural, and each fits in a sentence:
 
