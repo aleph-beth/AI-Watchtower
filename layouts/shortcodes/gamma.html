@@ -1,0 +1,17 @@
+{{- /* Embed a Gamma presentation.
+       Usage: {{< gamma id="5g8tts3d6fupatt" title="Aleph-Beth AI Security" doc="https://gamma.app/docs/..." >}}
+       `id` is the trailing id of the gamma.app/docs URL; `doc` (optional) adds an "open in Gamma" link. */ -}}
+{{- $id := .Get "id" -}}
+{{- $title := .Get "title" | default "Gamma presentation" -}}
+{{- $doc := .Get "doc" | default (printf "https://gamma.app/docs/%s" $id) -}}
+{{- $label := .Get "label" | default (cond (eq .Page.Language.Lang "fr") "Ouvrir dans Gamma ↗" "Open in Gamma ↗") -}}
+<div class="ab-gamma" style="margin:1.5rem 0">
+  <div style="position:relative;width:100%;aspect-ratio:16/10;max-height:80vh;border:1px solid var(--border);border-radius:var(--radius,8px);overflow:hidden;background:var(--entry)">
+    <iframe src="https://gamma.app/embed/{{ $id }}" title="{{ $title }}" loading="lazy"
+            allow="fullscreen" allowfullscreen
+            style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>
+  </div>
+  <p style="margin:.6rem 0 0;font-size:.9rem;text-align:right">
+    <a href="{{ $doc }}" target="_blank" rel="noopener">{{ $label }}</a>
+  </p>
+</div>
